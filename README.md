@@ -202,8 +202,7 @@ Hướng dẫn đủ cho macOS, Windows, Linux ở [`ui/README.md`](ui/README.md
 |---|---|
 | [`docs/SPEC_preprocessing.md`](docs/SPEC_preprocessing.md) | Bản thiết kế thi công của khối tiền xử lý (hợp đồng, 9 module, tham số, cơ chế báo lỗi, chiến lược test) |
 | [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md) | Những chỗ code làm khác thiết kế (kèm lý do) và các câu hỏi cần nhóm/GVHD chốt |
-| [`docs/ui/DESIGN_run_viewer.md`](docs/ui/DESIGN_run_viewer.md) | Thiết kế giao diện Run Viewer (bản gốc giao cho Antigravity; giao diện hiện tại đã được làm lại, xem `ui/README.md`) |
-| [`docs/PROMPT_for_agent.md`](docs/PROMPT_for_agent.md) · [`docs/PROMPT_fix_round1.md`](docs/PROMPT_fix_round1.md) · [`docs/ui/PROMPT_antigravity.md`](docs/ui/PROMPT_antigravity.md) | Prompt giao việc cho agent lập trình |
+
 
 ---
 

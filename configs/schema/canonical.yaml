@@ -1,0 +1,249 @@
+version: "1.0"
+# Khoảng giá trị là ngưỡng "không thể", dùng để phát hiện lỗi nhập liệu, không phải khoảng "bình thường".
+columns:
+  record_id:
+    dtype: "string"
+    required: true
+    measured_at: "pre"
+    dag_role: "id"
+    unit: null
+    range: null
+    allowed: null
+  grower_id:
+    dtype: "string"
+    required: true
+    measured_at: "pre"
+    dag_role: "cluster"
+    unit: null
+    range: null
+    allowed: null
+  field_id:
+    dtype: "string"
+    required: true
+    measured_at: "pre"
+    dag_role: "id"
+    unit: null
+    range: null
+    allowed: null
+  country:
+    dtype: "category"
+    required: true
+    measured_at: "pre"
+    dag_role: "confounder"
+    unit: null
+    range: null
+    allowed: ["C1", "C2", "C3", "C4"]
+  year:
+    dtype: "int16"
+    required: true
+    measured_at: "at"
+    dag_role: "confounder"
+    unit: "năm"
+    range: [2015, 2030]
+    allowed: null
+  rain_longterm_mm:
+    dtype: "float32"
+    required: true
+    measured_at: "pre"
+    dag_role: "confounder"
+    unit: "mm"
+    range: [0, 5000]
+    allowed: null
+  temp_longterm_c:
+    dtype: "float32"
+    required: true
+    measured_at: "pre"
+    dag_role: "confounder"
+    unit: "°C"
+    range: [-10, 45]
+    allowed: null
+  soil_om_baseline_pct:
+    dtype: "float32"
+    required: true
+    measured_at: "pre"
+    dag_role: "confounder"
+    unit: "%"
+    range: [0, 20]
+    allowed: null
+  field_size_ha:
+    dtype: "float32"
+    required: true
+    measured_at: "pre"
+    dag_role: "confounder"
+    unit: "ha"
+    range: [0.000001, 500]  # (0, 500]
+    allowed: null
+  extension_access:
+    dtype: "boolean"
+    required: true
+    measured_at: "pre"
+    dag_role: "confounder"
+    unit: null
+    range: null
+    allowed: [0, 1]
+  contract:
+    dtype: "category"
+    required: false
+    measured_at: "pre"
+    dag_role: "confounder"
+    unit: null
+    range: null
+    allowed: ["none", "informal", "formal"]
+  experience_yr:
+    dtype: "int16"
+    required: false
+    measured_at: "pre"
+    dag_role: "confounder"
+    unit: "năm"
+    range: [0, 60]
+    allowed: null
+  irrigation:
+    dtype: "boolean"
+    required: true
+    measured_at: "pre"
+    dag_role: "confounder"
+    unit: null
+    range: null
+    allowed: [0, 1]
+  no_till:
+    dtype: "boolean"
+    required: false
+    measured_at: "pre"
+    dag_role: "ambiguous"
+    unit: null
+    range: null
+    allowed: [0, 1]
+  organic_fert:
+    dtype: "boolean"
+    required: false
+    measured_at: "pre"
+    dag_role: "ambiguous"
+    unit: null
+    range: null
+    allowed: [0, 1]
+  rotation_len_yr:
+    dtype: "int16"
+    required: false
+    measured_at: "pre"
+    dag_role: "ambiguous"
+    unit: "năm"
+    range: [1, 10]
+    allowed: null
+  cover_crop:
+    dtype: "boolean"
+    required: true
+    measured_at: "at"
+    dag_role: "treatment"
+    unit: null
+    range: null
+    allowed: [0, 1]
+  cover_crop_months:
+    dtype: "float32"
+    required: false
+    measured_at: "at"
+    dag_role: "treatment_version"
+    unit: "tháng"
+    range: [0, 12]
+    allowed: null
+  cover_crop_type:
+    dtype: "category"
+    required: false
+    measured_at: "at"
+    dag_role: "treatment_version"
+    unit: null
+    range: null
+    allowed: ["none", "legume", "grass", "mixed"]
+  soil_om_post_pct:
+    dtype: "float32"
+    required: false
+    measured_at: "post"
+    affected_by_treatment: true
+    dag_role: "mediator"
+    unit: "%"
+    range: [0, 20]
+    allowed: null
+  weed_pressure:
+    dtype: "int8"
+    required: false
+    measured_at: "post"
+    affected_by_treatment: true
+    dag_role: "mediator"
+    unit: "thang 1-5"
+    range: [1, 5]
+    allowed: null
+  season_rain_mm:
+    dtype: "float32"
+    required: false
+    measured_at: "post"
+    affected_by_treatment: false
+    dag_role: "outcome_predictor"
+    unit: "mm"
+    range: [0, 5000]
+    allowed: null
+  buyer_incentive:
+    dtype: "boolean"
+    required: false
+    measured_at: "pre"
+    dag_role: "instrument"
+    unit: null
+    range: null
+    allowed: [0, 1]
+  noise_1:
+    dtype: "float32"
+    required: false
+    measured_at: "pre"
+    dag_role: "noise"
+    unit: null
+    range: null
+    allowed: null
+  noise_2:
+    dtype: "float32"
+    required: false
+    measured_at: "pre"
+    dag_role: "noise"
+    unit: null
+    range: null
+    allowed: null
+  noise_3:
+    dtype: "float32"
+    required: false
+    measured_at: "pre"
+    dag_role: "noise"
+    unit: null
+    range: null
+    allowed: null
+  noise_4:
+    dtype: "float32"
+    required: false
+    measured_at: "pre"
+    dag_role: "noise"
+    unit: null
+    range: null
+    allowed: null
+  noise_5:
+    dtype: "float32"
+    required: false
+    measured_at: "pre"
+    dag_role: "noise"
+    unit: null
+    range: null
+    allowed: null
+  yield_t_ha:
+    dtype: "float32"
+    required: true
+    measured_at: "post"
+    affected_by_treatment: true
+    dag_role: "outcome"
+    unit: "t/ha"
+    range: [0, 120]
+    allowed: null
+  in_program:
+    dtype: "boolean"
+    required: false
+    measured_at: "post"
+    affected_by_treatment: true
+    dag_role: "collider"
+    unit: null
+    range: null
+    allowed: [0, 1]
+

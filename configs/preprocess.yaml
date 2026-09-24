@@ -1,0 +1,124 @@
+version: 1
+defaults:
+  seed: 20260921
+  fail_fast: true
+  # Cổng an toàn: một bước loại quá tỷ lệ dòng này (cách ly, gộp trùng, bỏ dòng) thì dừng
+  # ngay ở bước đó (BLOCKED, mã thoát 3) thay vì chạy tiếp trên bảng gần rỗng. null = tắt.
+  max_row_loss_per_step: 0.20
+
+steps: [P01, P02, P03, P04, P05, P07, P08, P06, P09]
+
+p01:
+  on_error: "quarantine" # quarantine | raise | flag
+  dtype_coercion: "permissive" # strict | permissive
+  # flag (mặc định): chỉ đánh dấu, KHÔNG xóa giá trị — vì giá trị ngoài miền có thể là
+  # lỗi đơn vị mà P02 quy đổi (yield ghi kg/ha), hoặc giá trị cực trị mà P04 mới quyết định.
+  out_of_range: "flag" # to_na | flag | clip | raise
+  unknown_columns: "warn_keep" # warn_keep | drop | raise
+  duplicate_key_action: "defer_to_p03" # defer_to_p03 | raise
+  required_id_columns: ["record_id"]
+
+p02:
+  string_normalize:
+    trim: true
+    lower: true
+    strip_accents: true
+    collapse_spaces: true
+  category_mapping_mode: "explicit" # explicit | fuzzy_suggest | fuzzy_auto
+  fuzzy_threshold: 0.90
+  unmapped_action:
+    default: "to_na"
+    overrides:
+      country: "raise"
+      cover_crop: "raise"
+  unit_policy: "unit_column" # unit_column | source_declaration | threshold_inference | none
+  unit_column_name: "yield_unit"
+  unit_fallback: "source_declaration"
+  unit_threshold: 1000.0
+  decimal_comma: "auto" # auto | true | false
+  category_levels_source: "schema"
+
+p03:
+  key: ["grower_id", "field_id", "year"]
+  resolve: "keep_most_complete" # keep_most_complete | keep_first | keep_last | aggregate | flag_only
+  timestamp_column: null
+  conflict_action: "review_list" # review_list | drop_group | resolve
+  critical_columns: ["cover_crop", "yield_t_ha", "country", "year"]
+  numeric_tolerance: 1e-8
+  aggregate_rules:
+    numeric: "mean"
+    categorical: "mode"
+    boolean: "max"
+
+p04:
+  columns: ["yield_t_ha", "field_size_ha", "soil_om_baseline_pct", "experience_yr"]
+  method: "robust_z"
+  method_by_column:
+    yield_t_ha: "domain_range"
+    field_size_ha: "domain_range"
+  iqr_k: 3.0
+  robust_z_threshold: 3.5
+  percentile_bounds: [0.005, 0.995]
+  group_by: ["country"]
+  min_group_size: 30
+  action: "flag_only"
+  parallel_actions: ["winsorize"]
+  winsorize_at: "bound"
+  max_flag_rate: 0.05
+  unit_error_detection: true
+  unit_error_factors: [1000.0, 100.0, 10.0, 0.1, 0.01, 0.001]
+
+p05:
+  mode: "binary_threshold"
+  source_column: "cover_crop_months"
+  threshold_months: 2.0
+  threshold_sensitivity: [1.0, 2.0, 3.0]
+  partial_action: "to_na"
+  type_grouping: "group"
+  min_cell: 30
+  write_treatment_column: true
+
+p07:
+  time_source: "schema"
+  unknown_action: "exclude"
+  strict: true
+  allow_post_precision_vars: false
+  allow_post_as_secondary_outcome: true
+  diagnostics_on_post_vars: true
+
+p08:
+  source: "schema_roles"
+  allow_data_driven: false
+  manual_list: []
+  include_roles: ["confounder"]
+  include_precision_vars: true
+  exclude_roles: ["mediator", "collider", "instrument", "noise", "outcome", "treatment", "treatment_version", "id"]
+  ambiguous_action: "both"
+  basis:
+    continuous: "quadratic"
+    spline_df: 4
+  interactions: [["country", "*"]]
+  rare_level_action: "group"
+  rare_level_threshold: 0.01
+  min_variation: 1e-12
+
+p06:
+  scope: "adjustment_set_plus_ay"
+  outcome_missing: "ipcw_flag"
+  covariate_missing: "median_indicator"
+  impute_group_by: ["country"]
+  min_group_size: 30
+  keep_indicator: true
+  max_missing_col: 0.40
+  mechanism_check: ["describe", "regress"]
+  diff_warn_threshold: 0.05
+
+p09:
+  cluster_key: ["grower_id"]
+  fold_strategy: "group_stratified"
+  n_folds: 5
+  seed: 20260921
+  year_handling: "fixed_effect"
+  large_cluster_warn: 0.05
+  compute_icc: true
+

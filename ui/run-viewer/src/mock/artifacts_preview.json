@@ -1,0 +1,114 @@
+{
+ "quarantine": {
+  "step": "P01",
+  "n_rows": 2,
+  "columns": [
+   "record_id",
+   "grower_id",
+   "field_id",
+   "year",
+   "country",
+   "cover_crop",
+   "yield_t_ha",
+   "temp_longterm_c"
+  ],
+  "rows": [
+   {
+    "record_id": "<NA>",
+    "grower_id": "G0109",
+    "field_id": "F_G0109_3",
+    "year": "2026",
+    "country": "C2",
+    "cover_crop": "False",
+    "yield_t_ha": "52.097122",
+    "temp_longterm_c": "29.18415"
+   },
+   {
+    "record_id": "R00247",
+    "grower_id": "G0106",
+    "field_id": "F_G0106_3",
+    "year": "2028",
+    "country": "C2",
+    "cover_crop": "False",
+    "yield_t_ha": "321.323",
+    "temp_longterm_c": "<NA>"
+   }
+  ]
+ },
+ "review_list": {
+  "step": "P03",
+  "n_rows": 6,
+  "columns": [
+   "record_id",
+   "grower_id",
+   "field_id",
+   "year",
+   "country",
+   "cover_crop",
+   "yield_t_ha",
+   "dup_group_id"
+  ],
+  "rows": [
+   {
+    "record_id": "R00033",
+    "grower_id": "G0022",
+    "field_id": "F_G0022_2",
+    "year": "2019",
+    "country": "C3",
+    "cover_crop": "False",
+    "yield_t_ha": "50.300976",
+    "dup_group_id": "g0deb55"
+   },
+   {
+    "record_id": "R00033",
+    "grower_id": "G0022",
+    "field_id": "F_G0022_2",
+    "year": "2019",
+    "country": "C3",
+    "cover_crop": "True",
+    "yield_t_ha": "50.300976",
+    "dup_group_id": "g0deb55"
+   },
+   {
+    "record_id": "R00245",
+    "grower_id": "G0136",
+    "field_id": "F_G0136_3",
+    "year": "2021",
+    "country": "C3",
+    "cover_crop": "False",
+    "yield_t_ha": "43.37418",
+    "dup_group_id": "gfa4f43"
+   },
+   {
+    "record_id": "R00245",
+    "grower_id": "G0136",
+    "field_id": "F_G0136_3",
+    "year": "2021",
+    "country": "C3",
+    "cover_crop": "False",
+    "yield_t_ha": "<NA>",
+    "dup_group_id": "gfa4f43"
+   },
+   {
+    "record_id": "R00248",
+    "grower_id": "G0169",
+    "field_id": "F_G0169_1",
+    "year": "2025",
+    "country": "C3",
+    "cover_crop": "False",
+    "yield_t_ha": "53.89576",
+    "dup_group_id": "g122162"
+   },
+   {
+    "record_id": "R00248",
+    "grower_id": "G0169",
+    "field_id": "F_G0169_1",
+    "year": "2025",
+    "country": "C3",
+    "cover_crop": "True",
+    "yield_t_ha": "53.89576",
+    "dup_group_id": "g122162"
+   }
+  ]
+ }
+}

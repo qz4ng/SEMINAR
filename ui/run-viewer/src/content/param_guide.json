@@ -1,0 +1,1663 @@
+{
+ "P01": {
+  "on_error": {
+   "kind": "enum",
+   "ask": "Dòng có ô không ép được về đúng kiểu thì làm gì?",
+   "options": [
+    {
+     "value": "quarantine",
+     "label": "Cách ly dòng",
+     "effect": "Dòng lỗi bị tách sang artifact quarantine và không đi tiếp vào P02.",
+     "tags": [
+      "drop"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "flag",
+     "label": "Giữ, gắn cờ",
+     "effect": "Dòng vẫn đi tiếp; cột flag__p01__schema_error = True để lọc về sau.",
+     "tags": [
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "raise",
+     "label": "Dừng pipeline",
+     "effect": "Chỉ cần một dòng lỗi là dừng với P01.SCHEMA_ERROR.",
+     "tags": [
+      "stop"
+     ],
+     "implemented": true
+    }
+   ],
+   "note": "Dòng có record_id rỗng luôn bị cách ly, bất kể chọn giá trị nào."
+  },
+  "dtype_coercion": {
+   "kind": "enum",
+   "ask": "Ép kiểu dữ liệu theo schema chặt đến đâu?",
+   "options": [
+    {
+     "value": "permissive",
+     "label": "Ép mềm",
+     "effect": "Thử ép từng ô; ô hỏng thành trống và dòng đó tính là lỗi (xử lý theo on_error). Cột nhị phân/hạng mục còn ghi bằng chữ được để nguyên cho P02 ánh xạ.",
+     "tags": [
+      "modify"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "strict",
+     "label": "Ép cứng",
+     "effect": "Một cột không ép được là dừng ngay với P01.COERCE_FAILED.",
+     "tags": [
+      "stop"
+     ],
+     "implemented": true
+    }
+   ]
+  },
+  "out_of_range": {
+   "kind": "enum",
+   "ask": "Giá trị nằm ngoài miền khai trong schema thì làm gì?",
+   "options": [
+    {
+     "value": "flag",
+     "label": "Chỉ gắn cờ",
+     "effect": "Giữ nguyên giá trị, thêm cột flag__p01__out_of_range__<cột>. Để P02 (lỗi đơn vị) và P04 (cực trị) quyết định.",
+     "tags": [
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "to_na",
+     "label": "Xóa thành ô trống",
+     "effect": "Ô ngoài miền thành trống, kèm cờ. P06 sẽ coi là dữ liệu thiếu.",
+     "tags": [
+      "modify",
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "clip",
+     "label": "Kéo về biên",
+     "effect": "Giá trị bị cắt về min/max của schema, kèm cờ. Giá trị ghi sai đơn vị sẽ bị kéo về biên thay vì được P02 quy đổi.",
+     "tags": [
+      "modify",
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "raise",
+     "label": "Dừng pipeline",
+     "effect": "Có giá trị ngoài miền là dừng với P01.OUT_OF_RANGE.",
+     "tags": [
+      "stop"
+     ],
+     "implemented": true
+    }
+   ]
+  },
+  "unknown_columns": {
+   "kind": "enum",
+   "ask": "Cột không có trong schema thì làm gì?",
+   "options": [
+    {
+     "value": "warn_keep",
+     "label": "Giữ, cảnh báo",
+     "effect": "Cột được giữ nguyên, báo P01.UNKNOWN_COLUMN. P07 sau đó coi cột này là không rõ thời điểm đo.",
+     "tags": [
+      "report"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "drop",
+     "label": "Bỏ cột",
+     "effect": "Cột lạ bị xóa khỏi dữ liệu ngay tại P01.",
+     "tags": [
+      "cols"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "raise",
+     "label": "Dừng pipeline",
+     "effect": "Có cột lạ là dừng với P01.UNKNOWN_COLUMN.",
+     "tags": [
+      "stop"
+     ],
+     "implemented": true
+    }
+   ],
+   "note": "Cột bắt đầu bằng noise_ không bị tính là cột lạ."
+  },
+  "duplicate_key_action": {
+   "kind": "enum",
+   "ask": "record_id bị trùng thì làm gì?",
+   "options": [
+    {
+     "value": "defer_to_p03",
+     "label": "Để P03 xử lý",
+     "effect": "Chỉ ghi nhận P01.DUPLICATE_KEY_SEEN, không bỏ dòng nào.",
+     "tags": [
+      "report"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "raise",
+     "label": "Dừng pipeline",
+     "effect": "Có record_id trùng là dừng ngay.",
+     "tags": [
+      "stop"
+     ],
+     "implemented": true
+    }
+   ]
+  },
+  "required_id_columns": {
+   "kind": "list",
+   "ask": "Cột nào là mã định danh bắt buộc?",
+   "explain": "Dòng trống ở bất kỳ cột nào trong danh sách luôn bị cách ly (P01.BAD_RECORD_ID)."
+  }
+ },
+ "P02": {
+  "string_normalize": {
+   "kind": "fields",
+   "ask": "Chuẩn hóa chuỗi thế nào trước khi so khớp?",
+   "fields": {
+    "trim": "Cắt khoảng trắng hai đầu. Chỉ có tác dụng khi collapse_spaces = false (collapse_spaces đã cắt luôn hai đầu).",
+    "lower": "Hạ chữ thường: 'Yes' và 'yes' khớp cùng một alias.",
+    "strip_accents": "Bỏ dấu tiếng Việt: 'Có' khớp 'co'.",
+    "collapse_spaces": "Gộp nhiều khoảng trắng thành một."
+   },
+   "note": "Chỉ dùng để SO KHỚP ở cột hạng mục/nhị phân; giá trị ghi ra vẫn là mã chuẩn. Cột mã định danh chỉ được cắt khoảng trắng, không hạ hoa hay bỏ dấu."
+  },
+  "category_mapping_mode": {
+   "kind": "enum",
+   "ask": "Ánh xạ giá trị hạng mục về mã chuẩn bằng cách nào?",
+   "options": [
+    {
+     "value": "explicit",
+     "label": "Chỉ bảng alias",
+     "effect": "Chỉ đổi khi giá trị khớp mã chuẩn hoặc có trong bảng alias (raw_assumed.yaml). Còn lại xử lý theo unmapped_action.",
+     "tags": [
+      "modify"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "fuzzy_suggest",
+     "label": "Gợi ý gần đúng",
+     "effect": "Như explicit, và ghi thêm vào báo cáo các cặp gần giống (độ giống ≥ fuzzy_threshold). Không tự đổi.",
+     "tags": [
+      "modify",
+      "report"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "fuzzy_auto",
+     "label": "Tự đổi gần đúng",
+     "effect": "Giá trị gần giống một mã chuẩn (độ giống ≥ fuzzy_threshold) bị đổi luôn sang mã đó. Có thể ghép nhầm hai mã tên gần giống.",
+     "tags": [
+      "modify"
+     ],
+     "implemented": true
+    }
+   ]
+  },
+  "fuzzy_threshold": {
+   "kind": "number",
+   "ask": "Giống đến đâu thì coi là cùng một mã?",
+   "up": "Khắt khe hơn: ít cặp được ghép, nhiều giá trị rơi vào unmapped.",
+   "down": "Dễ dãi hơn: ghép được nhiều hơn nhưng dễ ghép nhầm.",
+   "when": {
+    "param": "category_mapping_mode",
+    "in": [
+     "fuzzy_suggest",
+     "fuzzy_auto"
+    ]
+   },
+   "when_text": "category_mapping_mode là fuzzy_suggest hoặc fuzzy_auto"
+  },
+  "unmapped_action": {
+   "kind": "enum_map",
+   "ask": "Giá trị không ánh xạ được thì làm gì?",
+   "options": [
+    {
+     "value": "to_na",
+     "label": "Thành ô trống",
+     "effect": "Ô đó thành trống và dòng được gắn cờ flag__p02__unmapped__<cột>.",
+     "tags": [
+      "modify",
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "keep_raw",
+     "label": "Giữ giá trị thô",
+     "effect": "Giữ nguyên chữ gốc, vẫn gắn cờ flag__p02__unmapped__<cột>.",
+     "tags": [
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "raise",
+     "label": "Dừng pipeline",
+     "effect": "Gom hết giá trị lạ của mọi cột rồi dừng một lần, kèm danh sách để bổ sung alias.",
+     "tags": [
+      "stop"
+     ],
+     "implemented": true
+    }
+   ],
+   "map_explain": "default áp cho mọi cột; overrides ghi đè cho từng cột.",
+   "note": "Alias khai null (vd 'Partial': null) nghĩa là cố ý để trống: không bị raise chặn, chỉ thành ô trống kèm cờ flag__p02__intentional_na__<cột>."
+  },
+  "unit_policy": {
+   "kind": "enum",
+   "ask": "Xác định đơn vị năng suất (kg/ha hay t/ha) bằng cách nào?",
+   "options": [
+    {
+     "value": "unit_column",
+     "label": "Theo cột đơn vị",
+     "effect": "Dòng có cột đơn vị chứa 'kg' được chia 1000, cột đơn vị đổi thành t/ha. Không có cột đơn vị thì theo unit_fallback.",
+     "tags": [
+      "modify"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "source_declaration",
+     "label": "Theo khai báo nguồn",
+     "effect": "Nếu raw_assumed.yaml khai yield = kg/ha thì chia cả cột cho 1000; không khai thì giữ nguyên.",
+     "tags": [
+      "modify"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "threshold_inference",
+     "label": "Suy theo ngưỡng",
+     "effect": "Chỉ dòng có yield > unit_threshold bị chia 1000 và gắn cờ flag__p02__unit_inferred. Ruộng năng suất thật sự cao có thể bị chia nhầm.",
+     "tags": [
+      "modify",
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "none",
+     "label": "Không quy đổi",
+     "effect": "Giữ nguyên số. Vẫn cảnh báo P02.MIXED_UNIT_SUSPECTED nếu thấy hai cụm giá trị.",
+     "tags": [
+      "report"
+     ],
+     "implemented": true
+    }
+   ]
+  },
+  "unit_column_name": {
+   "kind": "string",
+   "ask": "Cột nào ghi đơn vị năng suất?",
+   "explain": "Tên cột trong dữ liệu thô chứa đơn vị (vd 'kg/ha', 't/ha').",
+   "when": {
+    "param": "unit_policy",
+    "in": [
+     "unit_column"
+    ]
+   },
+   "when_text": "unit_policy = unit_column"
+  },
+  "unit_fallback": {
+   "kind": "enum",
+   "ask": "Dữ liệu không có cột đơn vị thì làm gì?",
+   "options": [
+    {
+     "value": "source_declaration",
+     "label": "Theo khai báo nguồn",
+     "effect": "Giống unit_policy = source_declaration.",
+     "tags": [
+      "modify"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "none",
+     "label": "Không quy đổi",
+     "effect": "Giữ nguyên số; lỗi đơn vị (nếu có) sẽ lộ ra ở P04.",
+     "tags": [
+      "report"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "raise",
+     "label": "Dừng pipeline",
+     "effect": "Dừng với P02.UNIT_POLICY_UNAVAILABLE.",
+     "tags": [
+      "stop"
+     ],
+     "implemented": true
+    }
+   ],
+   "when": {
+    "param": "unit_policy",
+    "in": [
+     "unit_column"
+    ]
+   },
+   "when_text": "unit_policy = unit_column"
+  },
+  "unit_threshold": {
+   "kind": "number",
+   "ask": "Trên mức nào thì coi yield đang ghi kg/ha?",
+   "up": "Ít dòng bị quy đổi; giá trị kg/ha nhỏ có thể lọt qua.",
+   "down": "Nhiều dòng bị quy đổi; dễ chia nhầm ruộng năng suất cao.",
+   "when": {
+    "param": "unit_policy",
+    "in": [
+     "threshold_inference"
+    ]
+   },
+   "when_text": "unit_policy = threshold_inference"
+  },
+  "decimal_comma": {
+   "kind": "enum",
+   "ask": "Có đọc '3,8' thành 3.8 không?",
+   "options": [
+    {
+     "value": "auto",
+     "label": "Tự nhận",
+     "effect": "Chỉ đổi dấu phẩy thành dấu chấm ở cột số khi hơn nửa giá trị có dạng 3,8.",
+     "tags": [
+      "modify"
+     ],
+     "implemented": true
+    },
+    {
+     "value": true,
+     "label": "Luôn đổi",
+     "effect": "Mọi cột số còn ở dạng chữ đều đổi dấu phẩy thành dấu chấm.",
+     "tags": [
+      "modify"
+     ],
+     "implemented": true
+    },
+    {
+     "value": false,
+     "label": "Không đổi",
+     "effect": "Giữ nguyên chuỗi có dấu phẩy.",
+     "tags": [],
+     "implemented": true
+    }
+   ]
+  },
+  "category_levels_source": {
+   "kind": "enum",
+   "ask": "Danh sách mức hợp lệ của cột hạng mục lấy từ đâu?",
+   "options": [
+    {
+     "value": "schema",
+     "label": "Từ schema",
+     "effect": "Mức hợp lệ cố định theo schema: giống nhau giữa các lần chạy.",
+     "tags": [],
+     "implemented": true
+    },
+    {
+     "value": "data",
+     "label": "Từ dữ liệu",
+     "effect": "Mọi giá trị đang có đều thành hợp lệ (không còn giá trị lạ để bắt); cảnh báo P02.CATEGORY_LEVELS_FROM_DATA vì tập mức đổi theo từng file.",
+     "tags": [
+      "report"
+     ],
+     "implemented": true
+    }
+   ]
+  }
+ },
+ "P03": {
+  "key": {
+   "kind": "list",
+   "ask": "Cột nào xác định một ruộng-năm?",
+   "explain": "Các dòng trùng mọi cột này là một nhóm trùng. Dòng thiếu giá trị ở khóa không được xét (P03.NULL_KEY)."
+  },
+  "resolve": {
+   "kind": "enum",
+   "ask": "Nhóm trùng (không mâu thuẫn) giữ lại dòng nào?",
+   "options": [
+    {
+     "value": "keep_most_complete",
+     "label": "Giữ dòng đầy đủ nhất",
+     "effect": "Giữ dòng ít ô trống nhất (hòa thì lấy record_id nhỏ nhất), bỏ phần còn lại.",
+     "tags": [
+      "drop"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "keep_first",
+     "label": "Giữ dòng đầu",
+     "effect": "Giữ dòng xuất hiện đầu tiên trong file.",
+     "tags": [
+      "drop"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "keep_last",
+     "label": "Giữ dòng mới nhất",
+     "effect": "Giữ dòng có timestamp_column lớn nhất; chưa đặt timestamp_column thì lỗi cấu hình.",
+     "tags": [
+      "drop"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "aggregate",
+     "label": "Gộp thành một dòng",
+     "effect": "Gộp theo aggregate_rules (số: trung bình, hạng mục: mode, nhị phân: max); dòng gộp có cờ flag__p03__aggregated.",
+     "tags": [
+      "modify",
+      "drop",
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "flag_only",
+     "label": "Chỉ gắn cờ",
+     "effect": "Giữ mọi dòng; chỉ có cờ flag__p03__duplicate và mã nhóm dup_group_id.",
+     "tags": [
+      "flag"
+     ],
+     "implemented": true
+    }
+   ],
+   "note": "Mọi nhóm trùng đều được gắn flag__p03__duplicate và dup_group_id. Nhóm mâu thuẫn xử lý theo conflict_action trước."
+  },
+  "timestamp_column": {
+   "kind": "string",
+   "ask": "Cột thời gian để biết dòng nào mới hơn?",
+   "explain": "Bắt buộc khi resolve = keep_last.",
+   "when": {
+    "param": "resolve",
+    "in": [
+     "keep_last"
+    ]
+   },
+   "when_text": "resolve = keep_last"
+  },
+  "conflict_action": {
+   "kind": "enum",
+   "ask": "Nhóm trùng nhưng khác nhau ở cột quan trọng thì làm gì?",
+   "options": [
+    {
+     "value": "review_list",
+     "label": "Đưa vào danh sách rà soát",
+     "effect": "Giữ nguyên mọi dòng của nhóm (gắn cờ flag__p03__conflict), xuất artifact review_list để người xem quyết định.",
+     "tags": [
+      "flag",
+      "report"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "drop_group",
+     "label": "Bỏ cả nhóm",
+     "effect": "Mọi dòng của nhóm mâu thuẫn bị loại.",
+     "tags": [
+      "drop"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "resolve",
+     "label": "Xử lý như trùng thường",
+     "effect": "Áp luôn quy tắc resolve lên nhóm mâu thuẫn, tức là chọn một dòng dù các dòng khai khác nhau.",
+     "tags": [
+      "drop"
+     ],
+     "implemented": true
+    }
+   ]
+  },
+  "critical_columns": {
+   "kind": "list",
+   "ask": "Khác nhau ở cột nào thì là mâu thuẫn?",
+   "explain": "Cùng khóa mà khác nhau ở một trong các cột này → nhóm mâu thuẫn (P03.CONFLICTING_DUPLICATES). Chỉ khác ở cột khác → trùng một phần."
+  },
+  "numeric_tolerance": {
+   "kind": "number",
+   "ask": "Hai số chênh bao nhiêu thì vẫn coi là bằng nhau?",
+   "up": "Nhiều nhóm được coi là trùng khớp hoàn toàn hơn.",
+   "down": "Sai số làm tròn nhỏ cũng bị tính là khác nhau."
+  },
+  "aggregate_rules": {
+   "kind": "fields",
+   "ask": "Gộp từng loại cột bằng phép gì?",
+   "fields": {
+    "numeric": "mean: lấy trung bình. Giá trị khác hiện không có tác dụng (cột giữ giá trị của dòng đầy đủ nhất).",
+    "categorical": "mode: lấy giá trị hay gặp nhất.",
+    "boolean": "max: có ít nhất một dòng True thì là True."
+   },
+   "when": {
+    "param": "resolve",
+    "in": [
+     "aggregate"
+    ]
+   },
+   "when_text": "resolve = aggregate"
+  }
+ },
+ "P04": {
+  "columns": {
+   "kind": "list",
+   "ask": "Kiểm tra giá trị bất thường ở cột nào?",
+   "explain": "Chỉ cột số; cột không phải số bị bỏ qua (P04.NON_NUMERIC_COLUMN_SKIPPED)."
+  },
+  "method": {
+   "kind": "enum",
+   "ask": "Phát hiện giá trị bất thường bằng cách nào?",
+   "options": [
+    {
+     "value": "domain_range",
+     "label": "Miền hợp lệ",
+     "effect": "Ngoài [min, max] khai trong schema là bất thường. Không tính theo nhóm.",
+     "tags": [
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "iqr",
+     "label": "IQR",
+     "effect": "Ngoài [Q1 − k·IQR, Q3 + k·IQR], tính riêng trong từng nhóm group_by.",
+     "tags": [
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "robust_z",
+     "label": "z bền (MAD)",
+     "effect": "|0.6745·(x − trung vị) / MAD| > ngưỡng, tính trong từng nhóm. Nhóm có MAD = 0 bị bỏ qua (P04.ZERO_MAD).",
+     "tags": [
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "percentile",
+     "label": "Phân vị",
+     "effect": "Ngoài cặp percentile_bounds trong từng nhóm. Luôn gắn cờ khoảng 1% dữ liệu dù không có gì bất thường.",
+     "tags": [
+      "flag"
+     ],
+     "implemented": true
+    }
+   ],
+   "note": "method chỉ quyết định PHÁT HIỆN. Sửa hay không là do action. method_by_column ghi đè method cho từng cột."
+  },
+  "method_by_column": {
+   "kind": "map",
+   "ask": "Cột nào dùng phương pháp riêng?",
+   "explain": "Ghi đè method cho từng cột. Mặc định yield_t_ha và field_size_ha dùng domain_range vì có miền hợp lệ rõ ràng."
+  },
+  "iqr_k": {
+   "kind": "number",
+   "ask": "Hệ số k của IQR",
+   "up": "Hàng rào rộng hơn: ít giá trị bị gắn cờ.",
+   "down": "Hàng rào hẹp hơn: nhiều giá trị bị gắn cờ (Tukey dùng 1.5; 3 là 'rất xa').",
+   "when": {
+    "any": [
+     {
+      "param": "method",
+      "in": [
+       "iqr"
+      ]
+     },
+     {
+      "valuesOf": "method_by_column",
+      "in": [
+       "iqr"
+      ]
+     }
+    ]
+   },
+   "when_text": "có cột dùng iqr"
+  },
+  "robust_z_threshold": {
+   "kind": "number",
+   "ask": "Ngưỡng z bền",
+   "up": "Ít giá trị bị gắn cờ.",
+   "down": "Nhiều giá trị bị gắn cờ. 3.5 là mức Iglewicz & Hoaglin đề xuất.",
+   "when": {
+    "any": [
+     {
+      "param": "method",
+      "in": [
+       "robust_z"
+      ]
+     },
+     {
+      "valuesOf": "method_by_column",
+      "in": [
+       "robust_z"
+      ]
+     }
+    ]
+   },
+   "when_text": "có cột dùng robust_z"
+  },
+  "percentile_bounds": {
+   "kind": "list",
+   "ask": "Cặp phân vị dưới/trên",
+   "explain": "Dùng làm ngưỡng khi method = percentile, và làm điểm kéo về khi winsorize_at = percentile."
+  },
+  "group_by": {
+   "kind": "list",
+   "ask": "Tính ngưỡng riêng theo nhóm nào?",
+   "explain": "Mỗi nhóm có ngưỡng riêng (mặc định theo nước), vì năng suất bình thường khác nhau giữa các nước. Không áp cho domain_range."
+  },
+  "min_group_size": {
+   "kind": "number",
+   "ask": "Nhóm nhỏ nhất được tính ngưỡng riêng",
+   "up": "Nhiều nhóm phải dùng ngưỡng toàn cục hơn (P04.SMALL_GROUP).",
+   "down": "Nhóm nhỏ cũng có ngưỡng riêng, nhưng ngưỡng đó kém ổn định."
+  },
+  "action": {
+   "kind": "enum",
+   "ask": "Giá trị bất thường thì xử lý thế nào?",
+   "options": [
+    {
+     "value": "flag_only",
+     "label": "Chỉ gắn cờ",
+     "effect": "Không sửa giá trị gốc; chỉ có cột cờ.",
+     "tags": [
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "winsorize",
+     "label": "Kéo về ngưỡng",
+     "effect": "Giá trị vượt ngưỡng bị thay bằng ngưỡng (vị trí theo winsorize_at).",
+     "tags": [
+      "modify",
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "to_na",
+     "label": "Xóa thành ô trống",
+     "effect": "Ô bất thường thành trống; P06 coi là dữ liệu thiếu và có thể điền lại.",
+     "tags": [
+      "modify",
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "drop_row",
+     "label": "Bỏ dòng",
+     "effect": "Bỏ mọi dòng có ít nhất một cột bất thường. max_flag_rate vẫn được kiểm tra trước khi bỏ.",
+     "tags": [
+      "drop"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "log_transform",
+     "label": "Biến đổi log",
+     "effect": "Chưa có trong code: hiện hành xử như flag_only.",
+     "tags": [],
+     "implemented": false
+    },
+    {
+     "value": "keep_as_feature",
+     "label": "Giữ làm đặc trưng",
+     "effect": "Chưa có trong code: hiện hành xử như flag_only.",
+     "tags": [],
+     "implemented": false
+    }
+   ],
+   "note": "Lựa chọn nào cũng tạo cờ flag__p04__outlier__<cột> và flag__p04__any."
+  },
+  "parallel_actions": {
+   "kind": "multi",
+   "ask": "Sinh thêm cột phiên bản đã xử lý để so sánh?",
+   "options": [
+    {
+     "value": "winsorize",
+     "label": "Thêm cột winsorize",
+     "effect": "Thêm cột <cột>__winsorized (giá trị kéo về ngưỡng), cột gốc giữ nguyên. Chỉ tạo khi cột có giá trị bị gắn cờ.",
+     "tags": [
+      "cols"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "log_transform",
+     "label": "Thêm cột log",
+     "effect": "Chưa có trong code: không tạo cột nào.",
+     "tags": [],
+     "implemented": false
+    }
+   ]
+  },
+  "winsorize_at": {
+   "kind": "enum",
+   "ask": "Kéo về điểm nào?",
+   "options": [
+    {
+     "value": "bound",
+     "label": "Tại ngưỡng phát hiện",
+     "effect": "Kéo về đúng ngưỡng đã dùng để gắn cờ.",
+     "tags": [
+      "modify"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "percentile",
+     "label": "Tại phân vị",
+     "effect": "Kéo về cặp percentile_bounds của nhóm.",
+     "tags": [
+      "modify"
+     ],
+     "implemented": true
+    }
+   ],
+   "when": {
+    "any": [
+     {
+      "param": "action",
+      "in": [
+       "winsorize"
+      ]
+     },
+     {
+      "param": "parallel_actions",
+      "contains": "winsorize"
+     }
+    ]
+   },
+   "when_text": "action hoặc parallel_actions có winsorize"
+  },
+  "max_flag_rate": {
+   "kind": "number",
+   "ask": "Gắn cờ quá bao nhiêu phần dữ liệu thì chặn?",
+   "up": "Dễ dãi hơn: có thể để lọt lỗi đơn vị chưa quy đổi.",
+   "down": "Chặn sớm hơn (P04.MAX_FLAG_RATE_EXCEEDED): gắn cờ nhiều thường là dấu hiệu lỗi đơn vị, không phải cực trị thật.",
+   "tags": [
+    "stop"
+   ]
+  },
+  "unit_error_detection": {
+   "kind": "enum",
+   "ask": "Có thử nhận ra lỗi đơn vị không?",
+   "options": [
+    {
+     "value": true,
+     "label": "Bật",
+     "effect": "Chia giá trị bất thường cho từng hệ số trong unit_error_factors; rơi vào miền hợp lệ thì gắn cờ flag__p04__suspected_unit_error__<cột>.",
+     "tags": [
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": false,
+     "label": "Tắt",
+     "effect": "Không thử.",
+     "tags": [],
+     "implemented": true
+    }
+   ]
+  },
+  "unit_error_factors": {
+   "kind": "list",
+   "ask": "Thử những hệ số quy đổi nào?",
+   "explain": "1000 ứng với kg/ha ↔ t/ha; 10 và 100 ứng với lỗi dời dấu phẩy.",
+   "when": {
+    "param": "unit_error_detection",
+    "in": [
+     true
+    ]
+   },
+   "when_text": "unit_error_detection = true"
+  }
+ },
+ "P05": {
+  "mode": {
+   "kind": "enum",
+   "ask": "Định nghĩa biến can thiệp A theo kiểu nào?",
+   "options": [
+    {
+     "value": "binary_threshold",
+     "label": "Nhị phân theo ngưỡng",
+     "effect": "A = 1 khi số tháng trồng cây che phủ ≥ threshold_months, ngược lại A = 0.",
+     "tags": [
+      "modify"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "multi_level",
+     "label": "Nhiều mức",
+     "effect": "Chưa có trong code: vẫn chạy như binary_threshold.",
+     "tags": [],
+     "implemented": false
+    },
+    {
+     "value": "per_version",
+     "label": "Theo phiên bản",
+     "effect": "Chưa có trong code: vẫn chạy như binary_threshold.",
+     "tags": [],
+     "implemented": false
+    },
+    {
+     "value": "continuous",
+     "label": "Liên tục",
+     "effect": "Chưa có trong code: vẫn chạy như binary_threshold.",
+     "tags": [],
+     "implemented": false
+    }
+   ]
+  },
+  "source_column": {
+   "kind": "string",
+   "ask": "Tính A từ cột nào?",
+   "explain": "Cột này thiếu hoặc trống hoàn toàn thì dùng cột cover_crop có sẵn (P05.FALLBACK_TO_BINARY)."
+  },
+  "threshold_months": {
+   "kind": "number",
+   "ask": "Trồng tối thiểu bao nhiêu tháng thì A = 1?",
+   "up": "Ít ruộng được tính là có áp dụng.",
+   "down": "Nhiều ruộng được tính là có áp dụng."
+  },
+  "threshold_sensitivity": {
+   "kind": "list",
+   "ask": "Thử thêm những ngưỡng nào?",
+   "explain": "Mỗi ngưỡng sinh một cột cover_crop__thr<k> để phân tích độ nhạy. Báo P05.THRESHOLD_SENSITIVITY khi có dòng đổi nhóm.",
+   "tags": [
+    "cols"
+   ]
+  },
+  "partial_action": {
+   "kind": "enum",
+   "ask": "Dòng ghi 'Partial' tính là gì?",
+   "options": [
+    {
+     "value": "to_na",
+     "label": "Để trống",
+     "effect": "A của dòng Partial là trống.",
+     "tags": [
+      "modify",
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "treated",
+     "label": "Có áp dụng",
+     "effect": "A = 1.",
+     "tags": [
+      "modify",
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "control",
+     "label": "Không áp dụng",
+     "effect": "A = 0.",
+     "tags": [
+      "modify",
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "own_level",
+     "label": "Mức riêng",
+     "effect": "Cần A nhiều mức. Với A nhị phân hiện tại: để trống như to_na và báo thêm P05.OWN_LEVEL_NOT_BINARY.",
+     "tags": [
+      "modify",
+      "flag"
+     ],
+     "implemented": true
+    }
+   ],
+   "note": "Không lựa chọn nào bỏ dòng: mọi dòng Partial được gắn cờ flag__p05__partial và xuất artifact partial_review."
+  },
+  "type_grouping": {
+   "kind": "enum",
+   "ask": "Gộp loại cây che phủ thế nào?",
+   "options": [
+    {
+     "value": "group",
+     "label": "Gộp nhóm",
+     "effect": "Dự kiến gộp loại hiếm vào nhóm lớn. Hiện chỉ chép cover_crop_type sang cover_crop_type__grouped.",
+     "tags": [
+      "cols"
+     ],
+     "implemented": false
+    },
+    {
+     "value": "all",
+     "label": "Gộp tất cả",
+     "effect": "Chưa có trong code: kết quả giống group.",
+     "tags": [
+      "cols"
+     ],
+     "implemented": false
+    },
+    {
+     "value": "keep",
+     "label": "Giữ nguyên",
+     "effect": "Chưa có trong code: kết quả giống group.",
+     "tags": [
+      "cols"
+     ],
+     "implemented": false
+    }
+   ],
+   "note": "Cả ba giá trị hiện cho cùng kết quả vì dữ liệu đã ở 4 nhóm (none/legume/grass/mixed)."
+  },
+  "min_cell": {
+   "kind": "number",
+   "ask": "Một loại cây che phủ cần ít nhất bao nhiêu dòng?",
+   "up": "Cảnh báo P05.SMALL_VERSION_CELL cho nhiều loại hơn.",
+   "down": "Ít cảnh báo hơn."
+  },
+  "write_treatment_column": {
+   "kind": "enum",
+   "ask": "Có ghi đè cột cover_crop không?",
+   "options": [
+    {
+     "value": true,
+     "label": "Ghi đè",
+     "effect": "cover_crop thành A theo định nghĩa mới; giá trị gốc lưu ở cover_crop__raw.",
+     "tags": [
+      "modify",
+      "cols"
+     ],
+     "implemented": true
+    },
+    {
+     "value": false,
+     "label": "Không ghi đè",
+     "effect": "cover_crop giữ nguyên; chỉ sinh các cột độ nhạy.",
+     "tags": [
+      "cols"
+     ],
+     "implemented": true
+    }
+   ]
+  }
+ },
+ "P06": {
+  "scope": {
+   "kind": "enum",
+   "ask": "Báo cáo dữ liệu thiếu trên những cột nào?",
+   "options": [
+    {
+     "value": "adjustment_set_plus_ay",
+     "label": "Chỉ L + A + Y",
+     "effect": "Báo cáo tỷ lệ thiếu và kiểu thiếu trên tập điều chỉnh L, can thiệp A và kết quả Y.",
+     "tags": [
+      "report"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "all_columns",
+     "label": "Mọi cột",
+     "effect": "Báo cáo trên mọi cột.",
+     "tags": [
+      "report"
+     ],
+     "implemented": true
+    }
+   ],
+   "note": "Điền thiếu luôn chỉ áp cho cột trong L; scope chỉ đổi phạm vi báo cáo và cảnh báo."
+  },
+  "outcome_missing": {
+   "kind": "enum",
+   "ask": "Dòng thiếu Y thì làm gì?",
+   "options": [
+    {
+     "value": "ipcw_flag",
+     "label": "Giữ dòng, tạo cờ quan sát",
+     "effect": "Giữ mọi dòng; giai đoạn ước lượng dùng cột c_outcome_observed để tính trọng số IPCW.",
+     "tags": [
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "complete_case",
+     "label": "Bỏ dòng thiếu Y",
+     "effect": "Loại dòng không có Y.",
+     "tags": [
+      "drop"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "both",
+     "label": "Cờ và bỏ dòng",
+     "effect": "Code hiện tại cho kết quả giống complete_case.",
+     "tags": [
+      "drop"
+     ],
+     "implemented": true
+    }
+   ],
+   "note": "Cột c_outcome_observed luôn được tạo."
+  },
+  "covariate_missing": {
+   "kind": "enum",
+   "ask": "Biến trong L bị thiếu thì làm gì?",
+   "options": [
+    {
+     "value": "median_indicator",
+     "label": "Điền + cột cờ",
+     "effect": "Số: điền trung vị; hạng mục: điền giá trị hay gặp nhất, tính theo nhóm impute_group_by. Thêm cờ flag__p06__imputed__<cột>.",
+     "tags": [
+      "modify",
+      "flag"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "drop_row",
+     "label": "Bỏ dòng",
+     "effect": "Loại dòng thiếu bất kỳ biến nào trong L.",
+     "tags": [
+      "drop"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "category_missing",
+     "label": "Mức 'Missing'",
+     "effect": "Chưa có trong code: ô thiếu giữ nguyên trống.",
+     "tags": [],
+     "implemented": false
+    }
+   ]
+  },
+  "impute_group_by": {
+   "kind": "list",
+   "ask": "Điền giá trị theo nhóm nào?",
+   "explain": "Mỗi nhóm có trung vị/mode riêng (mặc định theo nước)."
+  },
+  "min_group_size": {
+   "kind": "number",
+   "ask": "Nhóm nhỏ nhất được điền bằng giá trị riêng",
+   "up": "Nhiều nhóm dùng giá trị toàn cục hơn (P06.SMALL_GROUP).",
+   "down": "Nhóm nhỏ cũng dùng trung vị riêng, nhưng kém ổn định."
+  },
+  "keep_indicator": {
+   "kind": "enum",
+   "ask": "Có giữ cột cờ đánh dấu ô đã điền không?",
+   "options": [
+    {
+     "value": true,
+     "label": "Giữ",
+     "effect": "Giữ cột flag__p06__imputed__<cột>; mô hình sau có thể dùng cờ này.",
+     "tags": [
+      "cols"
+     ],
+     "implemented": true
+    },
+    {
+     "value": false,
+     "label": "Bỏ",
+     "effect": "Xóa cột cờ sau khi điền: không còn biết ô nào là giá trị điền.",
+     "tags": [
+      "cols"
+     ],
+     "implemented": true
+    }
+   ],
+   "when": {
+    "param": "covariate_missing",
+    "in": [
+     "median_indicator"
+    ]
+   },
+   "when_text": "covariate_missing = median_indicator"
+  },
+  "max_missing_col": {
+   "kind": "number",
+   "ask": "Cột thiếu quá bao nhiêu thì loại khỏi L?",
+   "up": "Giữ lại nhiều cột hơn nhưng phải điền nhiều hơn.",
+   "down": "Loại nhiều cột hơn khỏi L (P06.COLUMN_DROPPED_HIGH_MISSING).",
+   "tags": [
+    "select"
+   ]
+  },
+  "mechanism_check": {
+   "kind": "multi",
+   "ask": "Kiểm tra cơ chế thiếu bằng cách nào?",
+   "options": [
+    {
+     "value": "describe",
+     "label": "Mô tả",
+     "effect": "Thêm P06.MISSING_SUMMARY: tỷ lệ thiếu theo cột × nước × A và 10 kiểu thiếu hay gặp.",
+     "tags": [
+      "report"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "regress",
+     "label": "Hồi quy",
+     "effect": "Hồi quy logistic cờ quan sát Y theo L, báo 10 biến dự báo mạnh nhất (P06.MECHANISM_REGRESS). Chỉ để xem, không đổi dữ liệu.",
+     "tags": [
+      "report"
+     ],
+     "implemented": true
+    }
+   ]
+  },
+  "diff_warn_threshold": {
+   "kind": "number",
+   "ask": "Chênh tỷ lệ thiếu giữa hai nhóm A bao nhiêu thì cảnh báo?",
+   "up": "Ít cảnh báo P06.MISSING_DIFFERS_BY_TREATMENT hơn.",
+   "down": "Nhạy hơn với thiếu dữ liệu lệch theo A."
+  }
+ },
+ "P07": {
+  "time_source": {
+   "kind": "enum",
+   "ask": "Biết một cột đo trước hay sau can thiệp nhờ đâu?",
+   "options": [
+    {
+     "value": "schema",
+     "label": "Theo schema",
+     "effect": "Dùng measured_at khai trong schema.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "name_suffix",
+     "label": "Theo hậu tố _post",
+     "effect": "Cột có tên kết thúc bằng _post là đo sau, còn lại coi là đo trước. Bỏ qua schema.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "both",
+     "label": "Cả hai, ưu tiên schema",
+     "effect": "Quyết định theo schema; báo P07.TIME_SOURCE_CONFLICT khi hai nguồn lệch nhau.",
+     "tags": [
+      "select",
+      "report"
+     ],
+     "implemented": true
+    }
+   ]
+  },
+  "unknown_action": {
+   "kind": "enum",
+   "ask": "Cột không rõ thời điểm đo thì làm gì?",
+   "options": [
+    {
+     "value": "exclude",
+     "label": "Loại khỏi danh sách hợp lệ",
+     "effect": "Cột không được xét làm biến điều chỉnh.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "include",
+     "label": "Cho vào",
+     "effect": "Cột được xét làm biến điều chỉnh. Có thể để lọt biến đo sau can thiệp.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "raise",
+     "label": "Dừng pipeline",
+     "effect": "Dừng với P07.UNKNOWN_TIMING.",
+     "tags": [
+      "stop"
+     ],
+     "implemented": true
+    }
+   ],
+   "note": "Áp cho cột không có trong schema và cột có measured_at không rõ."
+  },
+  "strict": {
+   "kind": "enum",
+   "ask": "Biến đo sau can thiệp lọt qua thì dừng hay chỉ báo?",
+   "options": [
+    {
+     "value": true,
+     "label": "Dừng",
+     "effect": "Nếu soil_om_post_pct, weed_pressure hoặc in_program không bị chặn thì dừng với P07.POST_VAR_NOT_BLOCKED.",
+     "tags": [
+      "stop"
+     ],
+     "implemented": true
+    },
+    {
+     "value": false,
+     "label": "Chỉ báo lỗi",
+     "effect": "Ghi P07.POST_VAR_NOT_BLOCKED mức error rồi chạy tiếp.",
+     "tags": [
+      "report"
+     ],
+     "implemented": true
+    }
+   ]
+  },
+  "allow_post_precision_vars": {
+   "kind": "enum",
+   "ask": "Có cho biến đo sau nhưng không chịu tác động của A không?",
+   "options": [
+    {
+     "value": true,
+     "label": "Cho phép",
+     "effect": "Biến có affected_by_treatment = false (vd season_rain_mm) được xét làm biến điều chỉnh, kèm cảnh báo.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    },
+    {
+     "value": false,
+     "label": "Chặn",
+     "effect": "Mọi biến đo sau can thiệp đều bị chặn.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    }
+   ]
+  },
+  "allow_post_as_secondary_outcome": {
+   "kind": "enum",
+   "ask": "Có giữ Y trong danh sách cột hợp lệ không?",
+   "options": [
+    {
+     "value": true,
+     "label": "Giữ",
+     "effect": "yield_t_ha nằm trong danh sách hợp lệ (P08 vẫn loại outcome khỏi L).",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    },
+    {
+     "value": false,
+     "label": "Chặn",
+     "effect": "yield_t_ha bị đưa vào danh sách chặn và phải bị chặn.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    }
+   ]
+  },
+  "diagnostics_on_post_vars": {
+   "kind": "enum",
+   "ask": "Mô tả biến đo sau can thiệp theo nhóm A?",
+   "options": [
+    {
+     "value": true,
+     "label": "Bật",
+     "effect": "Chưa có trong code: chưa sinh bảng mô tả nào.",
+     "tags": [],
+     "implemented": false
+    },
+    {
+     "value": false,
+     "label": "Tắt",
+     "effect": "Không mô tả.",
+     "tags": [],
+     "implemented": true
+    }
+   ]
+  }
+ },
+ "P08": {
+  "source": {
+   "kind": "enum",
+   "ask": "Chọn biến điều chỉnh L theo nguồn nào?",
+   "options": [
+    {
+     "value": "schema_roles",
+     "label": "Theo vai trò trong DAG",
+     "effect": "Lấy cột có vai trò trong include_roles (và biến chỉ ảnh hưởng Y nếu bật include_precision_vars), trong số cột P07 cho phép.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "manual",
+     "label": "Danh sách tay",
+     "effect": "L = manual_list, chỉ giữ cột P07 cho phép.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "data_driven",
+     "label": "Theo dữ liệu",
+     "effect": "Dừng với lỗi cấu hình trừ khi allow_data_driven = true. Khi được bật, code hiện chạy như schema_roles và cảnh báo P08.DATA_DRIVEN_USED.",
+     "tags": [
+      "stop"
+     ],
+     "implemented": false
+    }
+   ]
+  },
+  "allow_data_driven": {
+   "kind": "enum",
+   "ask": "Có cho chọn biến theo dữ liệu không?",
+   "options": [
+    {
+     "value": false,
+     "label": "Không",
+     "effect": "source = data_driven sẽ dừng pipeline.",
+     "tags": [
+      "stop"
+     ],
+     "implemented": true
+    },
+    {
+     "value": true,
+     "label": "Có",
+     "effect": "Cho phép source = data_driven (kèm cảnh báo).",
+     "tags": [],
+     "implemented": true
+    }
+   ]
+  },
+  "manual_list": {
+   "kind": "list",
+   "ask": "Danh sách biến khi chọn tay",
+   "explain": "Chỉ cột có trong danh sách hợp lệ của P07 mới được giữ.",
+   "when": {
+    "param": "source",
+    "in": [
+     "manual"
+    ]
+   },
+   "when_text": "source = manual"
+  },
+  "include_roles": {
+   "kind": "list",
+   "ask": "Vai trò nào được đưa vào L?",
+   "explain": "confounder: gây nhiễu — ảnh hưởng cả A và Y, phải điều chỉnh."
+  },
+  "include_precision_vars": {
+   "kind": "enum",
+   "ask": "Có thêm biến chỉ ảnh hưởng Y không?",
+   "options": [
+    {
+     "value": true,
+     "label": "Thêm",
+     "effect": "Cột vai trò outcome_predictor được đưa vào L để giảm phương sai ước lượng.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    },
+    {
+     "value": false,
+     "label": "Không thêm",
+     "effect": "L chỉ gồm vai trò trong include_roles.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    }
+   ]
+  },
+  "exclude_roles": {
+   "kind": "list",
+   "ask": "Vai trò nào luôn bị loại khỏi L?",
+   "explain": "mediator (trung gian), collider (va chạm), instrument (công cụ), noise, outcome, treatment, treatment_version, id. Ngoài ra còn một lưới an toàn: các vai trò cấm lọt vào L là dừng với P08.FORBIDDEN_COLUMN_IN_L."
+  },
+  "ambiguous_action": {
+   "kind": "enum",
+   "ask": "Biến vai trò chưa rõ (vd practice RA khác) thì sao?",
+   "options": [
+    {
+     "value": "both",
+     "label": "Tạo hai biến thể L",
+     "effect": "O_as_confounder (có các biến này) và O_as_mediator (không có). L chính dùng bản có.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "include",
+     "label": "Cho vào L",
+     "effect": "Coi là confounder.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "exclude",
+     "label": "Loại khỏi L",
+     "effect": "Coi là mediator.",
+     "tags": [
+      "select"
+     ],
+     "implemented": true
+    }
+   ]
+  },
+  "basis": {
+   "kind": "fields",
+   "ask": "Dạng hàm cho mô hình propensity score (giai đoạn sau)",
+   "fields": {
+    "continuous": "linear | quadratic | spline: cách đưa biến liên tục vào mô hình.",
+    "spline_df": "Bậc tự do khi continuous = spline."
+   },
+   "note": "P08 chỉ ghi vào context (ps_basis_spec) cho giai đoạn ước lượng, không đổi dữ liệu."
+  },
+  "interactions": {
+   "kind": "list",
+   "ask": "Tương tác cho mô hình propensity score (giai đoạn sau)",
+   "explain": "['country', '*'] = country tương tác với mọi biến. Chỉ khai báo, P08 không dùng."
+  },
+  "rare_level_action": {
+   "kind": "enum",
+   "ask": "Mức hạng mục hiếm thì làm gì?",
+   "options": [
+    {
+     "value": "group",
+     "label": "Gộp thành 'other'",
+     "effect": "Ở cột hạng mục trong L, mức chiếm ít hơn rare_level_threshold được gộp thành 'other'.",
+     "tags": [
+      "modify"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "keep",
+     "label": "Giữ nguyên",
+     "effect": "Không đổi.",
+     "tags": [],
+     "implemented": true
+    },
+    {
+     "value": "drop",
+     "label": "Bỏ",
+     "effect": "Chưa có trong code: hiện giữ nguyên như keep.",
+     "tags": [],
+     "implemented": false
+    }
+   ]
+  },
+  "rare_level_threshold": {
+   "kind": "number",
+   "ask": "Chiếm ít hơn bao nhiêu thì là mức hiếm?",
+   "up": "Nhiều mức bị gộp hơn.",
+   "down": "Ít mức bị gộp hơn.",
+   "when": {
+    "param": "rare_level_action",
+    "in": [
+     "group"
+    ]
+   },
+   "when_text": "rare_level_action = group"
+  },
+  "min_variation": {
+   "kind": "number",
+   "ask": "Phương sai tối thiểu để giữ biến trong L",
+   "up": "Loại thêm biến gần như hằng số (P08.ZERO_VARIANCE_DROPPED).",
+   "down": "Chỉ loại biến hằng số tuyệt đối.",
+   "tags": [
+    "select"
+   ]
+  }
+ },
+ "P09": {
+  "cluster_key": {
+   "kind": "list",
+   "ask": "Cột nào xác định cụm?",
+   "explain": "Nhiều cột thì được nối thành một khóa. Dòng thiếu khóa thành một cụm riêng (P09.MISSING_CLUSTER_KEY). Kết quả ghi vào cột cluster_id.",
+   "tags": [
+    "cols"
+   ]
+  },
+  "fold_strategy": {
+   "kind": "enum",
+   "ask": "Chia fold cho cross-fitting thế nào?",
+   "options": [
+    {
+     "value": "group_stratified",
+     "label": "Theo cụm, cân A",
+     "effect": "Một cụm nằm trọn trong một fold, tỷ lệ A giữa các fold gần nhau. Quá ít cụm hoặc ít mẫu thì tự lùi về group (P09.FALLBACK_TO_GROUP_KFOLD).",
+     "tags": [
+      "cols"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "group",
+     "label": "Theo cụm",
+     "effect": "Một cụm nằm trọn trong một fold; không cân A, không dùng seed.",
+     "tags": [
+      "cols"
+     ],
+     "implemented": true
+    },
+    {
+     "value": "random",
+     "label": "Ngẫu nhiên",
+     "effect": "Chưa có trong code: hiện chạy như group.",
+     "tags": [],
+     "implemented": false
+    }
+   ],
+   "note": "Kết quả ghi vào cột fold_id; dòng thiếu A có fold_id = −1."
+  },
+  "n_folds": {
+   "kind": "number",
+   "ask": "Số fold",
+   "up": "Mỗi lần huấn luyện dùng nhiều dữ liệu hơn, nhưng mỗi fold ít cụm hơn.",
+   "down": "Mỗi fold nhiều cụm hơn, nhưng mỗi lần huấn luyện dùng ít dữ liệu hơn."
+  },
+  "seed": {
+   "kind": "number",
+   "ask": "Seed chia fold",
+   "explain": "Cố định để chạy lại cho cùng cách chia.",
+   "when": {
+    "param": "fold_strategy",
+    "in": [
+     "group_stratified"
+    ]
+   },
+   "when_text": "fold_strategy = group_stratified"
+  },
+  "year_handling": {
+   "kind": "enum",
+   "ask": "Xử lý năm ở giai đoạn ước lượng thế nào?",
+   "options": [
+    {
+     "value": "fixed_effect",
+     "label": "Hiệu ứng cố định",
+     "effect": "Dự kiến: đưa năm vào mô hình như biến điều chỉnh.",
+     "tags": [],
+     "implemented": false
+    },
+    {
+     "value": "second_cluster",
+     "label": "Cụm thứ hai",
+     "effect": "Dự kiến: sai số chuẩn cụm hai chiều (nông hộ × năm).",
+     "tags": [],
+     "implemented": false
+    },
+    {
+     "value": "ignore",
+     "label": "Bỏ qua",
+     "effect": "Dự kiến: không xử lý riêng năm.",
+     "tags": [],
+     "implemented": false
+    }
+   ],
+   "note": "Hiện chỉ ghi vào context year_handling cho giai đoạn sau; không ảnh hưởng cách chia fold."
+  },
+  "large_cluster_warn": {
+   "kind": "number",
+   "ask": "Một cụm chiếm quá bao nhiêu thì cảnh báo?",
+   "up": "Ít cảnh báo P09.LARGE_CLUSTER hơn.",
+   "down": "Nhạy hơn với cụm lớn."
+  },
+  "compute_icc": {
+   "kind": "enum",
+   "ask": "Có tính ICC của Y theo cụm không?",
+   "options": [
+    {
+     "value": true,
+     "label": "Tính",
+     "effect": "Báo P09.ICC_ESTIMATE: phần phương sai Y nằm giữa các cụm (ICC cao → cần tính sai số theo cụm).",
+     "tags": [
+      "report"
+     ],
+     "implemented": true
+    },
+    {
+     "value": false,
+     "label": "Không tính",
+     "effect": "Bỏ qua.",
+     "tags": [],
+     "implemented": true
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,16 @@
+data/raw/
+data/simulated/
+data/interim/
+data/processed/
+data/reports/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+# Môi trường, build, kết quả chạy
+venv/
+*.egg-info/
+node_modules/
+ui/run-viewer/dist/
+data/out/
+.DS_Store

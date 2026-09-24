@@ -1,0 +1,1722 @@
+{
+ "A": {
+  "run_id": "20260924-112145-95668ddd",
+  "started_at": "2026-09-24T11:21:45.519939+00:00",
+  "finished_at": "2026-09-24T11:21:45.965608+00:00",
+  "duration_s": 0.441,
+  "status": "warning",
+  "failed_step": null,
+  "config_digest": "46ec1c5a6f01",
+  "schema_version": "1.0",
+  "input": {
+   "path": "/tmp/claude-1000/-home-doan-Seminar/cadad364-d6f6-47e3-8482-a89e748efc7d/scratchpad/ui/A.csv",
+   "n_rows": 306,
+   "n_cols": 31,
+   "adapter": "canonical"
+  },
+  "steps": [
+   {
+    "module_id": "P01",
+    "module_name": "schema_check",
+    "spec_version": "1.0",
+    "status": "warning",
+    "started_at": "2026-09-24T11:21:45.541207790",
+    "duration_s": 0.02,
+    "n_rows_in": 306,
+    "n_rows_out": 304,
+    "n_cols_in": 31,
+    "n_cols_out": 34,
+    "rows_dropped": 2,
+    "rows_flagged": 34,
+    "columns_added": [
+     "flag__p01__not_allowed__contract",
+     "flag__p01__not_allowed__country",
+     "flag__p01__out_of_range__yield_t_ha"
+    ],
+    "columns_modified": [
+     "record_id",
+     "grower_id",
+     "field_id",
+     "country",
+     "year",
+     "rain_longterm_mm",
+     "temp_longterm_c",
+     "soil_om_baseline_pct",
+     "field_size_ha",
+     "extension_access",
+     "contract",
+     "experience_yr",
+     "irrigation",
+     "no_till",
+     "organic_fert",
+     "rotation_len_yr",
+     "cover_crop",
+     "cover_crop_months",
+     "cover_crop_type",
+     "soil_om_post_pct",
+     "weed_pressure",
+     "season_rain_mm",
+     "buyer_incentive",
+     "noise_1",
+     "noise_2",
+     "noise_3",
+     "noise_4",
+     "noise_5",
+     "yield_t_ha",
+     "in_program",
+     "yield_unit"
+    ],
+    "params_effective": {
+     "on_error": "quarantine",
+     "dtype_coercion": "permissive",
+     "out_of_range": "flag",
+     "unknown_columns": "warn_keep",
+     "duplicate_key_action": "defer_to_p03",
+     "required_id_columns": [
+      "record_id"
+     ]
+    },
+    "findings": [
+     {
+      "code": "P01.UNKNOWN_COLUMN",
+      "severity": "warning",
+      "message": "Kept unknown columns: ['yield_unit']",
+      "count": 1,
+      "column": null,
+      "sample_ids": [],
+      "details": {
+       "columns": [
+        "yield_unit"
+       ]
+      }
+     },
+     {
+      "code": "P01.NOT_ALLOWED_CATEGORY",
+      "severity": "warning",
+      "message": "Not allowed categories in country",
+      "count": 16,
+      "column": "country",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P01.COERCE_FAILED",
+      "severity": "warning",
+      "message": "Coercion failed in temp_longterm_c",
+      "count": 1,
+      "column": "temp_longterm_c",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P01.NOT_ALLOWED_CATEGORY",
+      "severity": "warning",
+      "message": "Not allowed categories in contract",
+      "count": 1,
+      "column": "contract",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P01.OUT_OF_RANGE",
+      "severity": "warning",
+      "message": "Out of range in yield_t_ha",
+      "count": 21,
+      "column": "yield_t_ha",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P01.BAD_RECORD_ID",
+      "severity": "error",
+      "message": "Bad ID in record_id",
+      "count": 1,
+      "column": "record_id",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P01.DUPLICATE_KEY_SEEN",
+      "severity": "info",
+      "message": "Duplicate record_ids deferred to P03",
+      "count": 6,
+      "column": "record_id",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P01.SUMMARY",
+      "severity": "info",
+      "message": "Module summary",
+      "count": 0,
+      "column": null,
+      "sample_ids": [],
+      "details": {
+       "errors_by_column": {
+        "country": {
+         "coerce_failed": 0,
+         "out_of_range": 0,
+         "not_allowed": 16
+        },
+        "temp_longterm_c": {
+         "coerce_failed": 1,
+         "out_of_range": 0,
+         "not_allowed": 0
+        },
+        "contract": {
+         "coerce_failed": 0,
+         "out_of_range": 0,
+         "not_allowed": 1
+        },
+        "yield_t_ha": {
+         "coerce_failed": 0,
+         "out_of_range": 21,
+         "not_allowed": 0
+        }
+       },
+       "n_quarantined": 1,
+       "schema_version": "1.0"
+      }
+     }
+    ],
+    "artifacts": {
+     "quarantine": "quarantine.parquet"
+    },
+    "context_updates": [
+     "quarantined_ids"
+    ]
+   },
+   {
+    "module_id": "P02",
+    "module_name": "harmonize",
+    "spec_version": "1.0",
+    "status": "warning",
+    "started_at": "2026-09-24T11:21:45.578306675",
+    "duration_s": 0.02,
+    "n_rows_in": 304,
+    "n_rows_out": 304,
+    "n_cols_in": 34,
+    "n_cols_out": 35,
+    "rows_dropped": 0,
+    "rows_flagged": 34,
+    "columns_added": [
+     "flag__p02__unmapped__contract"
+    ],
+    "columns_modified": [
+     "record_id",
+     "grower_id",
+     "field_id",
+     "country",
+     "contract",
+     "yield_t_ha",
+     "yield_unit"
+    ],
+    "params_effective": {
+     "string_normalize": {
+      "trim": true,
+      "lower": true,
+      "strip_accents": true,
+      "collapse_spaces": true
+     },
+     "category_mapping_mode": "explicit",
+     "fuzzy_threshold": 0.9,
+     "unmapped_action": {
+      "default": "to_na",
+      "overrides": {
+       "country": "raise",
+       "cover_crop": "raise"
+      }
+     },
+     "unit_policy": "unit_column",
+     "unit_column_name": "yield_unit",
+     "unit_fallback": "source_declaration",
+     "unit_threshold": 1000.0,
+     "decimal_comma": "auto",
+     "category_levels_source": "schema"
+    },
+    "findings": [
+     {
+      "code": "P02.UNMAPPED_CATEGORY",
+      "severity": "warning",
+      "message": "Không ánh xạ được 'invalid_cat' trong contract",
+      "count": 1,
+      "column": "contract",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P02.UNIT_CONVERTED",
+      "severity": "info",
+      "message": "Yield converted by unit_column",
+      "count": 17,
+      "column": null,
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P02.MIXED_UNIT_SUSPECTED",
+      "severity": "warning",
+      "message": "Bimodal yield distribution suggests mixed units",
+      "count": 304,
+      "column": null,
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P02.SUMMARY",
+      "severity": "info",
+      "message": "Module summary",
+      "count": 0,
+      "column": null,
+      "sample_ids": [],
+      "details": {
+       "mapping_applied": [
+        {
+         "column": "country",
+         "raw_value": "c-1",
+         "mapped_value": "C1",
+         "n_rows": 4
+        },
+        {
+         "column": "country",
+         "raw_value": "c1",
+         "mapped_value": "C1",
+         "n_rows": 123
+        },
+        {
+         "column": "country",
+         "raw_value": "c2",
+         "mapped_value": "C2",
+         "n_rows": 99
+        },
+        {
+         "column": "country",
+         "raw_value": "c3",
+         "mapped_value": "C3",
+         "n_rows": 44
+        },
+        {
+         "column": "country",
+         "raw_value": "c4",
+         "mapped_value": "C4",
+         "n_rows": 26
+        },
+        {
+         "column": "country",
+         "raw_value": "country 1",
+         "mapped_value": "C1",
+         "n_rows": 8
+        }
+       ],
+       "unit_conversion": {
+        "n_rows_converted": 17,
+        "factor": 1000.0,
+        "policy_used": "unit_column"
+       },
+       "fuzzy_suggestions": []
+      }
+     }
+    ],
+    "artifacts": {},
+    "context_updates": [
+     "unit_conversions"
+    ]
+   },
+   {
+    "module_id": "P03",
+    "module_name": "deduplicate",
+    "spec_version": "1.0",
+    "status": "warning",
+    "started_at": "2026-09-24T11:21:45.604355812",
+    "duration_s": 0.051,
+    "n_rows_in": 304,
+    "n_rows_out": 301,
+    "n_cols_in": 35,
+    "n_cols_out": 38,
+    "rows_dropped": 3,
+    "rows_flagged": 39,
+    "columns_added": [
+     "dup_group_id",
+     "flag__p03__conflict",
+     "flag__p03__duplicate"
+    ],
+    "columns_modified": [
+     "record_id",
+     "grower_id",
+     "field_id",
+     "country",
+     "year",
+     "rain_longterm_mm",
+     "temp_longterm_c",
+     "soil_om_baseline_pct",
+     "field_size_ha",
+     "extension_access",
+     "contract",
+     "experience_yr",
+     "irrigation",
+     "no_till",
+     "organic_fert",
+     "rotation_len_yr",
+     "cover_crop",
+     "cover_crop_months",
+     "cover_crop_type",
+     "soil_om_post_pct",
+     "weed_pressure",
+     "season_rain_mm",
+     "buyer_incentive",
+     "noise_1",
+     "noise_2",
+     "noise_3",
+     "noise_4",
+     "noise_5",
+     "yield_t_ha",
+     "in_program",
+     "yield_unit",
+     "flag__p01__not_allowed__country",
+     "flag__p01__not_allowed__contract",
+     "flag__p01__out_of_range__yield_t_ha",
+     "flag__p02__unmapped__contract"
+    ],
+    "params_effective": {
+     "key": [
+      "grower_id",
+      "field_id",
+      "year"
+     ],
+     "resolve": "keep_most_complete",
+     "timestamp_column": null,
+     "conflict_action": "review_list",
+     "critical_columns": [
+      "cover_crop",
+      "yield_t_ha",
+      "country",
+      "year"
+     ],
+     "numeric_tolerance": 1e-08,
+     "aggregate_rules": {
+      "numeric": "mean",
+      "categorical": "mode",
+      "boolean": "max"
+     }
+    },
+    "findings": [
+     {
+      "code": "P03.EXACT_DUPLICATES",
+      "severity": "info",
+      "message": "Exact duplicates found",
+      "count": 1,
+      "column": null,
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P03.PARTIAL_DUPLICATES",
+      "severity": "warning",
+      "message": "Partial duplicates found",
+      "count": 2,
+      "column": null,
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P03.CONFLICTING_DUPLICATES",
+      "severity": "error",
+      "message": "Conflicting duplicates found",
+      "count": 3,
+      "column": null,
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P03.SUMMARY",
+      "severity": "info",
+      "message": "Module summary",
+      "count": 0,
+      "column": null,
+      "sample_ids": [],
+      "details": {
+       "groups_by_type": {
+        "exact": 1,
+        "partial": 2,
+        "conflict": 3
+       },
+       "rows_removed": 3,
+       "conflict_columns_frequency": {
+        "cover_crop": 2,
+        "yield_t_ha": 1
+       }
+      }
+     }
+    ],
+    "artifacts": {
+     "review_list": "review_list.parquet"
+    },
+    "context_updates": [
+     "duplicate_groups"
+    ]
+   },
+   {
+    "module_id": "P04",
+    "module_name": "outliers",
+    "spec_version": "1.0",
+    "status": "warning",
+    "started_at": "2026-09-24T11:21:45.666170359",
+    "duration_s": 0.033,
+    "n_rows_in": 301,
+    "n_rows_out": 301,
+    "n_cols_in": 38,
+    "n_cols_out": 45,
+    "rows_dropped": 0,
+    "rows_flagged": 39,
+    "columns_added": [
+     "flag__p04__any",
+     "flag__p04__outlier__experience_yr",
+     "flag__p04__outlier__field_size_ha",
+     "flag__p04__outlier__soil_om_baseline_pct",
+     "flag__p04__outlier__yield_t_ha",
+     "flag__p04__suspected_unit_error__yield_t_ha",
+     "yield_t_ha__winsorized"
+    ],
+    "columns_modified": [],
+    "params_effective": {
+     "columns": [
+      "yield_t_ha",
+      "field_size_ha",
+      "soil_om_baseline_pct",
+      "experience_yr"
+     ],
+     "method": "robust_z",
+     "method_by_column": {
+      "yield_t_ha": "domain_range",
+      "field_size_ha": "domain_range"
+     },
+     "iqr_k": 3.0,
+     "robust_z_threshold": 3.5,
+     "percentile_bounds": [
+      0.005,
+      0.995
+     ],
+     "group_by": [
+      "country"
+     ],
+     "min_group_size": 30,
+     "action": "flag_only",
+     "parallel_actions": [
+      "winsorize"
+     ],
+     "winsorize_at": "bound",
+     "max_flag_rate": 0.05,
+     "unit_error_detection": true,
+     "unit_error_factors": [
+      1000.0,
+      100.0,
+      10.0,
+      0.1,
+      0.01,
+      0.001
+     ]
+    },
+    "findings": [
+     {
+      "code": "P04.OUTLIERS_FLAGGED",
+      "severity": "info",
+      "message": "Outliers in yield_t_ha",
+      "count": 3,
+      "column": "yield_t_ha",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P04.SUSPECTED_UNIT_ERROR",
+      "severity": "warning",
+      "message": "Unit error suspected in yield_t_ha",
+      "count": 6,
+      "column": "yield_t_ha",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P04.SMALL_GROUP",
+      "severity": "info",
+      "message": "Group C4 size 25 < 30, using global bounds",
+      "count": 25,
+      "column": "soil_om_baseline_pct",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P04.SMALL_GROUP",
+      "severity": "info",
+      "message": "Group C4 size 22 < 30, using global bounds",
+      "count": 22,
+      "column": "experience_yr",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P04.SUMMARY",
+      "severity": "info",
+      "message": "Module summary",
+      "count": 0,
+      "column": null,
+      "sample_ids": [],
+      "details": {
+       "thresholds": {
+        "yield_t_ha_all": {
+         "lower": 0.0,
+         "upper": 120.0,
+         "method": "domain_range",
+         "n_flagged": 3
+        },
+        "field_size_ha_all": {
+         "lower": 1e-06,
+         "upper": 500.0,
+         "method": "domain_range",
+         "n_flagged": 0
+        },
+        "soil_om_baseline_pct_C1": {
+         "lower": -6.593142986297607,
+         "upper": 16.766433715820312,
+         "method": "robust_z",
+         "n_flagged": 0
+        },
+        "soil_om_baseline_pct_C2": {
+         "lower": -5.667023181915283,
+         "upper": 17.079286575317383,
+         "method": "robust_z",
+         "n_flagged": 0
+        },
+        "soil_om_baseline_pct_C3": {
+         "lower": -8.659177780151367,
+         "upper": 17.897735595703125,
+         "method": "robust_z",
+         "n_flagged": 0
+        },
+        "soil_om_baseline_pct_global": {
+         "lower": -5.788661479949951,
+         "upper": 16.35087776184082,
+         "method": "robust_z",
+         "n_flagged": 0
+        },
+        "experience_yr_C1": {
+         "lower": -23.51223128243143,
+         "upper": 59.51223128243143,
+         "method": "robust_z",
+         "n_flagged": 0
+        },
+        "experience_yr_C2": {
+         "lower": -39.673832468495185,
+         "upper": 79.67383246849519,
+         "method": "robust_z",
+         "n_flagged": 0
+        },
+        "experience_yr_C3": {
+         "lower": -23.295774647887328,
+         "upper": 75.29577464788733,
+         "method": "robust_z",
+         "n_flagged": 0
+        },
+        "experience_yr_global": {
+         "lower": -31.890289103039287,
+         "upper": 71.8902891030393,
+         "method": "robust_z",
+         "n_flagged": 0
+        }
+       },
+       "flag_rate": 0.009966777408637873,
+       "suspected_unit_factors": {
+        "yield_t_ha": {
+         "1000.0": 2,
+         "100.0": 2,
+         "10.0": 2
+        }
+       },
+       "summary_before_after": {
+        "yield_t_ha": {
+         "before_mean": 33.635459899902344,
+         "before_sd": 40.31283950805664,
+         "after_mean": 33.635459899902344,
+         "after_sd": 40.31283950805664
+        }
+       }
+      }
+     }
+    ],
+    "artifacts": {},
+    "context_updates": []
+   },
+   {
+    "module_id": "P05",
+    "module_name": "treatment_define",
+    "spec_version": "1.0",
+    "status": "ok",
+    "started_at": "2026-09-24T11:21:45.707859755",
+    "duration_s": 0.01,
+    "n_rows_in": 301,
+    "n_rows_out": 301,
+    "n_cols_in": 45,
+    "n_cols_out": 50,
+    "rows_dropped": 0,
+    "rows_flagged": 39,
+    "columns_added": [
+     "cover_crop__raw",
+     "cover_crop__thr1",
+     "cover_crop__thr2",
+     "cover_crop__thr3",
+     "cover_crop_type__grouped"
+    ],
+    "columns_modified": [
+     "cover_crop"
+    ],
+    "params_effective": {
+     "mode": "binary_threshold",
+     "source_column": "cover_crop_months",
+     "threshold_months": 2.0,
+     "threshold_sensitivity": [
+      1.0,
+      2.0,
+      3.0
+     ],
+     "partial_action": "to_na",
+     "type_grouping": "group",
+     "min_cell": 30,
+     "write_treatment_column": true
+    },
+    "findings": [
+     {
+      "code": "P05.THRESHOLD_SENSITIVITY",
+      "severity": "info",
+      "message": "Max 28 samples change status under sensitivity thresholds",
+      "count": 28,
+      "column": null,
+      "sample_ids": [],
+      "details": {}
+     }
+    ],
+    "artifacts": {},
+    "context_updates": [
+     "treatment_definition",
+     "treatment_column"
+    ]
+   },
+   {
+    "module_id": "P07",
+    "module_name": "time_order",
+    "spec_version": "1.0",
+    "status": "warning",
+    "started_at": "2026-09-24T11:21:45.727387190",
+    "duration_s": 0.0,
+    "n_rows_in": 301,
+    "n_rows_out": 301,
+    "n_cols_in": 50,
+    "n_cols_out": 50,
+    "rows_dropped": 0,
+    "rows_flagged": 0,
+    "columns_added": [],
+    "columns_modified": [],
+    "params_effective": {
+     "time_source": "schema",
+     "unknown_action": "exclude",
+     "strict": true,
+     "allow_post_precision_vars": false,
+     "allow_post_as_secondary_outcome": true,
+     "diagnostics_on_post_vars": true
+    },
+    "findings": [
+     {
+      "code": "P07.BLOCKED_POST_TREATMENT",
+      "severity": "info",
+      "message": "Blocked post var soil_om_post_pct",
+      "count": 1,
+      "column": "soil_om_post_pct",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P07.BLOCKED_POST_TREATMENT",
+      "severity": "info",
+      "message": "Blocked post var weed_pressure",
+      "count": 1,
+      "column": "weed_pressure",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P07.BLOCKED_POST_TREATMENT",
+      "severity": "info",
+      "message": "Blocked post var season_rain_mm",
+      "count": 1,
+      "column": "season_rain_mm",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P07.SECONDARY_OUTCOME_ALLOWED",
+      "severity": "info",
+      "message": "Allowed post-treatment outcome: yield_t_ha",
+      "count": 1,
+      "column": "yield_t_ha",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P07.BLOCKED_POST_TREATMENT",
+      "severity": "info",
+      "message": "Blocked post var in_program",
+      "count": 1,
+      "column": "in_program",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P07.UNKNOWN_TIMING",
+      "severity": "warning",
+      "message": "Cột 'yield_unit' không khai trong schema, coi như không rõ thời điểm đo",
+      "count": 1,
+      "column": "yield_unit",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P07.UNKNOWN_TIMING",
+      "severity": "warning",
+      "message": "Cột 'yield_t_ha__winsorized' không khai trong schema, coi như không rõ thời điểm đo",
+      "count": 1,
+      "column": "yield_t_ha__winsorized",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P07.UNKNOWN_TIMING",
+      "severity": "warning",
+      "message": "Cột 'cover_crop__raw' không khai trong schema, coi như không rõ thời điểm đo",
+      "count": 1,
+      "column": "cover_crop__raw",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P07.UNKNOWN_TIMING",
+      "severity": "warning",
+      "message": "Cột 'cover_crop__thr1' không khai trong schema, coi như không rõ thời điểm đo",
+      "count": 1,
+      "column": "cover_crop__thr1",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P07.UNKNOWN_TIMING",
+      "severity": "warning",
+      "message": "Cột 'cover_crop__thr2' không khai trong schema, coi như không rõ thời điểm đo",
+      "count": 1,
+      "column": "cover_crop__thr2",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P07.UNKNOWN_TIMING",
+      "severity": "warning",
+      "message": "Cột 'cover_crop__thr3' không khai trong schema, coi như không rõ thời điểm đo",
+      "count": 1,
+      "column": "cover_crop__thr3",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P07.UNKNOWN_TIMING",
+      "severity": "warning",
+      "message": "Cột 'cover_crop_type__grouped' không khai trong schema, coi như không rõ thời điểm đo",
+      "count": 1,
+      "column": "cover_crop_type__grouped",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P07.SUMMARY",
+      "severity": "info",
+      "message": "Module summary",
+      "count": 0,
+      "column": null,
+      "sample_ids": [],
+      "details": {
+       "column_time_table": [
+        {
+         "column": "record_id",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "id",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "grower_id",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "cluster",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "field_id",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "id",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "country",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "confounder",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "year",
+         "measured_at": "at",
+         "affected_by_treatment": null,
+         "dag_role": "confounder",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "rain_longterm_mm",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "confounder",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "temp_longterm_c",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "confounder",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "soil_om_baseline_pct",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "confounder",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "field_size_ha",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "confounder",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "extension_access",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "confounder",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "contract",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "confounder",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "experience_yr",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "confounder",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "irrigation",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "confounder",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "no_till",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "ambiguous",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "organic_fert",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "ambiguous",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "rotation_len_yr",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "ambiguous",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "cover_crop",
+         "measured_at": "at",
+         "affected_by_treatment": null,
+         "dag_role": "treatment",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "cover_crop_months",
+         "measured_at": "at",
+         "affected_by_treatment": null,
+         "dag_role": "treatment_version",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "cover_crop_type",
+         "measured_at": "at",
+         "affected_by_treatment": null,
+         "dag_role": "treatment_version",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "soil_om_post_pct",
+         "measured_at": "post",
+         "affected_by_treatment": true,
+         "dag_role": "mediator",
+         "eligible": false,
+         "reason": "post-treatment affected"
+        },
+        {
+         "column": "weed_pressure",
+         "measured_at": "post",
+         "affected_by_treatment": true,
+         "dag_role": "mediator",
+         "eligible": false,
+         "reason": "post-treatment affected"
+        },
+        {
+         "column": "season_rain_mm",
+         "measured_at": "post",
+         "affected_by_treatment": false,
+         "dag_role": "outcome_predictor",
+         "eligible": false,
+         "reason": "post-treatment precision"
+        },
+        {
+         "column": "buyer_incentive",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "instrument",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "noise_1",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "noise",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "noise_2",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "noise",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "noise_3",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "noise",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "noise_4",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "noise",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "noise_5",
+         "measured_at": "pre",
+         "affected_by_treatment": null,
+         "dag_role": "noise",
+         "eligible": true,
+         "reason": ""
+        },
+        {
+         "column": "yield_t_ha",
+         "measured_at": "post",
+         "affected_by_treatment": true,
+         "dag_role": "outcome",
+         "eligible": true,
+         "reason": "allowed secondary outcome"
+        },
+        {
+         "column": "in_program",
+         "measured_at": "post",
+         "affected_by_treatment": true,
+         "dag_role": "collider",
+         "eligible": false,
+         "reason": "post-treatment affected"
+        },
+        {
+         "column": "yield_unit",
+         "measured_at": "unknown",
+         "affected_by_treatment": null,
+         "dag_role": "unknown",
+         "eligible": false,
+         "reason": "không có trong schema"
+        },
+        {
+         "column": "yield_t_ha__winsorized",
+         "measured_at": "unknown",
+         "affected_by_treatment": null,
+         "dag_role": "unknown",
+         "eligible": false,
+         "reason": "không có trong schema"
+        },
+        {
+         "column": "cover_crop__raw",
+         "measured_at": "unknown",
+         "affected_by_treatment": null,
+         "dag_role": "unknown",
+         "eligible": false,
+         "reason": "không có trong schema"
+        },
+        {
+         "column": "cover_crop__thr1",
+         "measured_at": "unknown",
+         "affected_by_treatment": null,
+         "dag_role": "unknown",
+         "eligible": false,
+         "reason": "không có trong schema"
+        },
+        {
+         "column": "cover_crop__thr2",
+         "measured_at": "unknown",
+         "affected_by_treatment": null,
+         "dag_role": "unknown",
+         "eligible": false,
+         "reason": "không có trong schema"
+        },
+        {
+         "column": "cover_crop__thr3",
+         "measured_at": "unknown",
+         "affected_by_treatment": null,
+         "dag_role": "unknown",
+         "eligible": false,
+         "reason": "không có trong schema"
+        },
+        {
+         "column": "cover_crop_type__grouped",
+         "measured_at": "unknown",
+         "affected_by_treatment": null,
+         "dag_role": "unknown",
+         "eligible": false,
+         "reason": "không có trong schema"
+        }
+       ]
+      }
+     }
+    ],
+    "artifacts": {},
+    "context_updates": [
+     "blocked_columns",
+     "eligible_columns"
+    ]
+   },
+   {
+    "module_id": "P08",
+    "module_name": "variable_roles",
+    "spec_version": "1.0",
+    "status": "warning",
+    "started_at": "2026-09-24T11:21:45.735210419",
+    "duration_s": 0.003,
+    "n_rows_in": 301,
+    "n_rows_out": 301,
+    "n_cols_in": 50,
+    "n_cols_out": 50,
+    "rows_dropped": 0,
+    "rows_flagged": 39,
+    "columns_added": [],
+    "columns_modified": [],
+    "params_effective": {
+     "source": "schema_roles",
+     "allow_data_driven": false,
+     "manual_list": [],
+     "include_roles": [
+      "confounder"
+     ],
+     "include_precision_vars": true,
+     "exclude_roles": [
+      "mediator",
+      "collider",
+      "instrument",
+      "noise",
+      "outcome",
+      "treatment",
+      "treatment_version",
+      "id"
+     ],
+     "ambiguous_action": "both",
+     "basis": {
+      "continuous": "quadratic",
+      "spline_df": 4
+     },
+     "interactions": [
+      [
+       "country",
+       "*"
+      ]
+     ],
+     "rare_level_action": "group",
+     "rare_level_threshold": 0.01,
+     "min_variation": 1e-12
+    },
+    "findings": [
+     {
+      "code": "P08.AMBIGUOUS_ROLE",
+      "severity": "warning",
+      "message": "Created variants for ['no_till', 'organic_fert', 'rotation_len_yr']",
+      "count": 3,
+      "column": null,
+      "sample_ids": [],
+      "details": {
+       "ambiguous": [
+        "no_till",
+        "organic_fert",
+        "rotation_len_yr"
+       ]
+      }
+     },
+     {
+      "code": "P08.ADJUSTMENT_SET_BUILT",
+      "severity": "info",
+      "message": "Built L with 13 columns",
+      "count": 13,
+      "column": null,
+      "sample_ids": [],
+      "details": {
+       "columns": [
+        "contract",
+        "country",
+        "experience_yr",
+        "extension_access",
+        "field_size_ha",
+        "irrigation",
+        "no_till",
+        "organic_fert",
+        "rain_longterm_mm",
+        "rotation_len_yr",
+        "soil_om_baseline_pct",
+        "temp_longterm_c",
+        "year"
+       ]
+      }
+     },
+     {
+      "code": "P08.SUMMARY",
+      "severity": "info",
+      "message": "Module summary",
+      "count": 0,
+      "column": null,
+      "sample_ids": [],
+      "details": {
+       "ps_basis_spec": {
+        "basis": {
+         "continuous": "quadratic",
+         "spline_df": 4
+        },
+        "interactions": [
+         [
+          "country",
+          "*"
+         ]
+        ]
+       }
+      }
+     }
+    ],
+    "artifacts": {
+     "data_dictionary": "data_dictionary.csv"
+    },
+    "context_updates": [
+     "adjustment_set",
+     "adjustment_set_variants",
+     "ps_basis_spec"
+    ]
+   },
+   {
+    "module_id": "P06",
+    "module_name": "missingness",
+    "spec_version": "1.0",
+    "status": "ok",
+    "started_at": "2026-09-24T11:21:45.748743534",
+    "duration_s": 0.137,
+    "n_rows_in": 301,
+    "n_rows_out": 301,
+    "n_cols_in": 50,
+    "n_cols_out": 55,
+    "rows_dropped": 0,
+    "rows_flagged": 64,
+    "columns_added": [
+     "c_outcome_observed",
+     "flag__p06__imputed__contract",
+     "flag__p06__imputed__experience_yr",
+     "flag__p06__imputed__irrigation",
+     "flag__p06__missing_any_L"
+    ],
+    "columns_modified": [
+     "contract",
+     "experience_yr",
+     "irrigation"
+    ],
+    "params_effective": {
+     "scope": "adjustment_set_plus_ay",
+     "outcome_missing": "ipcw_flag",
+     "covariate_missing": "median_indicator",
+     "impute_group_by": [
+      "country"
+     ],
+     "min_group_size": 30,
+     "keep_indicator": true,
+     "max_missing_col": 0.4,
+     "mechanism_check": [
+      "describe",
+      "regress"
+     ],
+     "diff_warn_threshold": 0.05
+    },
+    "findings": [
+     {
+      "code": "P06.SMALL_GROUP",
+      "severity": "info",
+      "message": "Group C4 size 25 < 30, using global impute for contract",
+      "count": 25,
+      "column": "contract",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P06.IMPUTED",
+      "severity": "info",
+      "message": "Imputed contract",
+      "count": 1,
+      "column": "contract",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P06.SMALL_GROUP",
+      "severity": "info",
+      "message": "Group C4 size 22 < 30, using global impute for experience_yr",
+      "count": 22,
+      "column": "experience_yr",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P06.IMPUTED",
+      "severity": "info",
+      "message": "Imputed experience_yr",
+      "count": 30,
+      "column": "experience_yr",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P06.SMALL_GROUP",
+      "severity": "info",
+      "message": "Group C4 size 25 < 30, using global impute for irrigation",
+      "count": 25,
+      "column": "irrigation",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P06.IMPUTED",
+      "severity": "info",
+      "message": "Imputed irrigation",
+      "count": 1,
+      "column": "irrigation",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P06.OUTCOME_MISSING_RATE",
+      "severity": "info",
+      "message": "Outcome missing rate",
+      "count": 15,
+      "column": "yield_t_ha",
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P06.MISSING_SUMMARY",
+      "severity": "info",
+      "message": "Missing summary",
+      "count": 0,
+      "column": null,
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P06.MECHANISM_REGRESS",
+      "severity": "info",
+      "message": "Top missingness predictors: ['country_C2', 'temp_longterm_c', 'extension_access', 'country_C3', 'field_size_ha', 'country_C4', 'experience_yr', 'no_till', 'rain_longterm_mm', 'contract_informal']",
+      "count": 0,
+      "column": null,
+      "sample_ids": [],
+      "details": {}
+     },
+     {
+      "code": "P06.SUMMARY",
+      "severity": "info",
+      "message": "Module summary",
+      "count": 0,
+      "column": null,
+      "sample_ids": [],
+      "details": {
+       "imputation": {
+        "contract": {
+         "method": "mode",
+         "n_imputed": 1,
+         "value_used_by_group": {
+          "C1": "informal",
+          "C2": "formal",
+          "C3": "formal",
+          "C4": "formal"
+         }
+        },
+        "experience_yr": {
+         "method": "median",
+         "n_imputed": 30,
+         "value_used_by_group": {
+          "C1": 18.0,
+          "C2": 20.0,
+          "C3": 26.0,
+          "C4": 20.0
+         }
+        },
+        "irrigation": {
+         "method": "mode",
+         "n_imputed": 1,
+         "value_used_by_group": {
+          "C1": "False",
+          "C2": "False",
+          "C3": "True",
+          "C4": "False"
+         }
+        }
+       },
+       "regression_coefs": {
+        "country_C2": 0.6806854328921472,
+        "temp_longterm_c": 0.5505587456215615,
+        "extension_access": -0.535990624364628,
+        "country_C3": 0.5045680343086005,
+        "field_size_ha": 0.44708572469643576,
+        "country_C4": 0.42362005340160436,
+        "experience_yr": 0.41177907868501273,
+        "no_till": 0.3101303771112475,
+        "rain_longterm_mm": 0.24409765757327234,
+        "contract_informal": 0.23788276704032635
+       },
+       "missing_by_column": {
+        "contract": {
+         "('C1', False)": 0.0,
+         "('C1', True)": 0.01818181818181818,
+         "('C2', False)": 0.0,
+         "('C2', True)": 0.0,
+         "('C3', False)": 0.0,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.0,
+         "('C4', True)": 0.0
+        },
+        "country": {
+         "('C1', False)": 0.0,
+         "('C1', True)": 0.0,
+         "('C2', False)": 0.0,
+         "('C2', True)": 0.0,
+         "('C3', False)": 0.0,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.0,
+         "('C4', True)": 0.0
+        },
+        "experience_yr": {
+         "('C1', False)": 0.14102564102564102,
+         "('C1', True)": 0.05454545454545454,
+         "('C2', False)": 0.0967741935483871,
+         "('C2', True)": 0.08108108108108109,
+         "('C3', False)": 0.06896551724137931,
+         "('C3', True)": 0.13333333333333333,
+         "('C4', False)": 0.14285714285714285,
+         "('C4', True)": 0.09090909090909091
+        },
+        "extension_access": {
+         "('C1', False)": 0.0,
+         "('C1', True)": 0.0,
+         "('C2', False)": 0.0,
+         "('C2', True)": 0.0,
+         "('C3', False)": 0.0,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.0,
+         "('C4', True)": 0.0
+        },
+        "field_size_ha": {
+         "('C1', False)": 0.0,
+         "('C1', True)": 0.0,
+         "('C2', False)": 0.0,
+         "('C2', True)": 0.0,
+         "('C3', False)": 0.0,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.0,
+         "('C4', True)": 0.0
+        },
+        "irrigation": {
+         "('C1', False)": 0.0,
+         "('C1', True)": 0.0,
+         "('C2', False)": 0.0,
+         "('C2', True)": 0.02702702702702703,
+         "('C3', False)": 0.0,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.0,
+         "('C4', True)": 0.0
+        },
+        "no_till": {
+         "('C1', False)": 0.0,
+         "('C1', True)": 0.0,
+         "('C2', False)": 0.0,
+         "('C2', True)": 0.0,
+         "('C3', False)": 0.0,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.0,
+         "('C4', True)": 0.0
+        },
+        "organic_fert": {
+         "('C1', False)": 0.0,
+         "('C1', True)": 0.0,
+         "('C2', False)": 0.0,
+         "('C2', True)": 0.0,
+         "('C3', False)": 0.0,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.0,
+         "('C4', True)": 0.0
+        },
+        "rain_longterm_mm": {
+         "('C1', False)": 0.0,
+         "('C1', True)": 0.0,
+         "('C2', False)": 0.0,
+         "('C2', True)": 0.0,
+         "('C3', False)": 0.0,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.0,
+         "('C4', True)": 0.0
+        },
+        "rotation_len_yr": {
+         "('C1', False)": 0.0,
+         "('C1', True)": 0.0,
+         "('C2', False)": 0.0,
+         "('C2', True)": 0.0,
+         "('C3', False)": 0.0,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.0,
+         "('C4', True)": 0.0
+        },
+        "soil_om_baseline_pct": {
+         "('C1', False)": 0.0,
+         "('C1', True)": 0.0,
+         "('C2', False)": 0.0,
+         "('C2', True)": 0.0,
+         "('C3', False)": 0.0,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.0,
+         "('C4', True)": 0.0
+        },
+        "temp_longterm_c": {
+         "('C1', False)": 0.0,
+         "('C1', True)": 0.0,
+         "('C2', False)": 0.0,
+         "('C2', True)": 0.0,
+         "('C3', False)": 0.0,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.0,
+         "('C4', True)": 0.0
+        },
+        "year": {
+         "('C1', False)": 0.0,
+         "('C1', True)": 0.0,
+         "('C2', False)": 0.0,
+         "('C2', True)": 0.0,
+         "('C3', False)": 0.0,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.0,
+         "('C4', True)": 0.0
+        },
+        "cover_crop": {
+         "('C1', False)": 0.0,
+         "('C1', True)": 0.0,
+         "('C2', False)": 0.0,
+         "('C2', True)": 0.0,
+         "('C3', False)": 0.0,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.0,
+         "('C4', True)": 0.0
+        },
+        "yield_t_ha": {
+         "('C1', False)": 0.07692307692307693,
+         "('C1', True)": 0.07272727272727272,
+         "('C2', False)": 0.04838709677419355,
+         "('C2', True)": 0.0,
+         "('C3', False)": 0.034482758620689655,
+         "('C3', True)": 0.0,
+         "('C4', False)": 0.07142857142857142,
+         "('C4', True)": 0.0
+        }
+       },
+       "pattern_counts": [
+        {
+         "pattern": "(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)",
+         "count": 257
+        },
+        {
+         "pattern": "(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)",
+         "count": 27
+        },
+        {
+         "pattern": "(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)",
+         "count": 13
+        },
+        {
+         "pattern": "(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)",
+         "count": 2
+        },
+        {
+         "pattern": "(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)",
+         "count": 1
+        },
+        {
+         "pattern": "(1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)",
+         "count": 1
+        }
+       ]
+      }
+     }
+    ],
+    "artifacts": {},
+    "context_updates": [
+     "adjustment_set",
+     "outcome_observed_column"
+    ]
+   },
+   {
+    "module_id": "P09",
+    "module_name": "clusters",
+    "spec_version": "1.0",
+    "status": "ok",
+    "started_at": "2026-09-24T11:21:45.899371862",
+    "duration_s": 0.051,
+    "n_rows_in": 301,
+    "n_rows_out": 301,
+    "n_cols_in": 55,
+    "n_cols_out": 57,
+    "rows_dropped": 0,
+    "rows_flagged": 64,
+    "columns_added": [
+     "cluster_id",
+     "fold_id"
+    ],
+    "columns_modified": [],
+    "params_effective": {
+     "cluster_key": [
+      "grower_id"
+     ],
+     "fold_strategy": "group_stratified",
+     "n_folds": 5,
+     "seed": 20260921,
+     "year_handling": "fixed_effect",
+     "large_cluster_warn": 0.05,
+     "compute_icc": true
+    },
+    "findings": [
+     {
+      "code": "P09.ICC_ESTIMATE",
+      "severity": "info",
+      "message": "ICC = 0.660",
+      "count": 0,
+      "column": null,
+      "sample_ids": [],
+      "details": {
+       "icc": 0.6602974844031659
+      }
+     },
+     {
+      "code": "P09.CLUSTER_SUMMARY",
+      "severity": "info",
+      "message": "Clusters: 155",
+      "count": 155,
+      "column": null,
+      "sample_ids": [],
+      "details": {}
+     }
+    ],
+    "artifacts": {},
+    "context_updates": [
+     "cluster_column",
+     "fold_column",
+     "year_handling"
+    ]
+   }
+  ],
+  "context_final": {
+   "adjustment_set": [
+    "contract",
+    "country",
+    "experience_yr",
+    "extension_access",
+    "field_size_ha",
+    "irrigation",
+    "no_till",
+    "organic_fert",
+    "rain_longterm_mm",
+    "rotation_len_yr",
+    "soil_om_baseline_pct",
+    "temp_longterm_c",
+    "year"
+   ],
+   "treatment_definition": {
+    "source": "cover_crop_months",
+    "rule": ">= 2.0",
+    "partial_action": "to_na",
+    "type_grouping": "group"
+   },
+   "cluster_column": "cluster_id",
+   "fold_column": "fold_id",
+   "outcome_observed_column": "c_outcome_observed"
+  },
+  "outputs": {
+   "analysis_ready": "/tmp/claude-1000/-home-doan-Seminar/cadad364-d6f6-47e3-8482-a89e748efc7d/scratchpad/ui/out_A/processed/20260924-112145-95668ddd/analysis_ready.parquet",
+   "artifacts": {}
+  }
+ }
+}

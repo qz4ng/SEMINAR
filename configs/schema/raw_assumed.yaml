@@ -1,0 +1,46 @@
+version: "1.0"
+
+# Định dạng thô GIẢ ĐỊNH. Định dạng thật của CIAT chưa biết (chờ data audit);
+# khi có dữ liệu thật thì viết adapter trong io/adapters/, không sửa các module.
+#
+# Khóa alias được P02 chuẩn hóa (cắt khoảng trắng, hạ hoa, bỏ dấu) trước khi tra,
+# nên viết hoa/thường ở đây không quan trọng. Giá trị bên phải là MÃ CANONICAL.
+
+# Tên cột thô -> tên cột canonical. Để rỗng cho tới khi có bản xuất thật.
+column_aliases: {}
+
+# Các kiểu viết tên quốc gia gặp trong bản xuất khảo sát.
+country_aliases:
+  "country 1": "C1"
+  "c1": "C1"
+  "c-1": "C1"
+  "country 2": "C2"
+  "c2": "C2"
+  "c-2": "C2"
+  "country 3": "C3"
+  "c3": "C3"
+  "c-3": "C3"
+  "country 4": "C4"
+  "c4": "C4"
+  "c-4": "C4"
+
+# Giá trị nhị phân. "Partial" -> null: P02 đưa về ô trống, P05 mới quyết định xếp vào đâu.
+# "True"/"False" xuất hiện khi dữ liệu đi qua CSV.
+boolean_aliases:
+  "Yes": 1
+  "No": 0
+  "Partial": null
+  "Có": 1
+  "Không": 0
+  "True": 1
+  "False": 0
+  "1": 1
+  "0": 0
+
+# Alias cho các cột hạng mục khác, dạng {tên_cột: {giá trị thô: mã canonical}}.
+category_aliases: {}
+
+# Đơn vị yield theo nguồn dữ liệu, dùng khi unit_policy = source_declaration.
+unit_declarations: {}
+
+decimal_comma: true

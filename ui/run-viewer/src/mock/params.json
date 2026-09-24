@@ -1,0 +1,432 @@
+{
+ "P01": {
+  "defaults": {
+   "on_error": "quarantine",
+   "dtype_coercion": "permissive",
+   "out_of_range": "flag",
+   "unknown_columns": "warn_keep",
+   "duplicate_key_action": "defer_to_p03",
+   "required_id_columns": [
+    "record_id"
+   ]
+  },
+  "allowed": {
+   "on_error": [
+    "quarantine",
+    "raise",
+    "flag"
+   ],
+   "dtype_coercion": [
+    "strict",
+    "permissive"
+   ],
+   "out_of_range": [
+    "to_na",
+    "flag",
+    "clip",
+    "raise"
+   ],
+   "unknown_columns": [
+    "warn_keep",
+    "drop",
+    "raise"
+   ],
+   "duplicate_key_action": [
+    "defer_to_p03",
+    "raise"
+   ],
+   "required_id_columns": "array"
+  }
+ },
+ "P02": {
+  "defaults": {
+   "string_normalize": {
+    "trim": true,
+    "lower": true,
+    "strip_accents": true,
+    "collapse_spaces": true
+   },
+   "category_mapping_mode": "explicit",
+   "fuzzy_threshold": 0.9,
+   "unmapped_action": {
+    "default": "to_na",
+    "overrides": {
+     "country": "raise",
+     "cover_crop": "raise"
+    }
+   },
+   "unit_policy": "unit_column",
+   "unit_column_name": "yield_unit",
+   "unit_fallback": "source_declaration",
+   "unit_threshold": 1000.0,
+   "decimal_comma": "auto",
+   "category_levels_source": "schema"
+  },
+  "allowed": {
+   "string_normalize": {
+    "trim": "boolean",
+    "lower": "boolean",
+    "strip_accents": "boolean",
+    "collapse_spaces": "boolean"
+   },
+   "category_mapping_mode": [
+    "explicit",
+    "fuzzy_suggest",
+    "fuzzy_auto"
+   ],
+   "fuzzy_threshold": "number",
+   "unmapped_action": {
+    "default": [
+     "to_na",
+     "keep_raw",
+     "raise"
+    ],
+    "overrides": "object"
+   },
+   "unit_policy": [
+    "unit_column",
+    "source_declaration",
+    "threshold_inference",
+    "none"
+   ],
+   "unit_column_name": "string",
+   "unit_fallback": [
+    "source_declaration",
+    "none",
+    "raise"
+   ],
+   "unit_threshold": "number",
+   "decimal_comma": [
+    "auto",
+    true,
+    false
+   ],
+   "category_levels_source": [
+    "schema",
+    "data"
+   ]
+  }
+ },
+ "P03": {
+  "defaults": {
+   "key": [
+    "grower_id",
+    "field_id",
+    "year"
+   ],
+   "resolve": "keep_most_complete",
+   "timestamp_column": null,
+   "conflict_action": "review_list",
+   "critical_columns": [
+    "cover_crop",
+    "yield_t_ha",
+    "country",
+    "year"
+   ],
+   "numeric_tolerance": 1e-08,
+   "aggregate_rules": {
+    "numeric": "mean",
+    "categorical": "mode",
+    "boolean": "max"
+   }
+  },
+  "allowed": {
+   "key": "array",
+   "resolve": [
+    "keep_most_complete",
+    "keep_first",
+    "keep_last",
+    "aggregate",
+    "flag_only"
+   ],
+   "conflict_action": [
+    "review_list",
+    "drop_group",
+    "resolve"
+   ],
+   "critical_columns": "array",
+   "numeric_tolerance": "number",
+   "aggregate_rules": "object"
+  }
+ },
+ "P04": {
+  "defaults": {
+   "columns": [
+    "yield_t_ha",
+    "field_size_ha",
+    "soil_om_baseline_pct",
+    "experience_yr"
+   ],
+   "method": "robust_z",
+   "method_by_column": {
+    "yield_t_ha": "domain_range",
+    "field_size_ha": "domain_range"
+   },
+   "iqr_k": 3.0,
+   "robust_z_threshold": 3.5,
+   "percentile_bounds": [
+    0.005,
+    0.995
+   ],
+   "group_by": [
+    "country"
+   ],
+   "min_group_size": 30,
+   "action": "flag_only",
+   "parallel_actions": [
+    "winsorize"
+   ],
+   "winsorize_at": "bound",
+   "max_flag_rate": 0.05,
+   "unit_error_detection": true,
+   "unit_error_factors": [
+    1000.0,
+    100.0,
+    10.0,
+    0.1,
+    0.01,
+    0.001
+   ]
+  },
+  "allowed": {
+   "columns": "array",
+   "method": [
+    "domain_range",
+    "iqr",
+    "robust_z",
+    "percentile"
+   ],
+   "method_by_column": "object",
+   "iqr_k": "number",
+   "robust_z_threshold": "number",
+   "percentile_bounds": "array",
+   "group_by": "array",
+   "min_group_size": "integer",
+   "action": [
+    "flag_only",
+    "winsorize",
+    "to_na",
+    "drop_row",
+    "log_transform",
+    "keep_as_feature"
+   ],
+   "parallel_actions": {
+    "array_of": [
+     "winsorize",
+     "log_transform"
+    ]
+   },
+   "winsorize_at": [
+    "bound",
+    "percentile"
+   ],
+   "max_flag_rate": "number",
+   "unit_error_detection": "boolean",
+   "unit_error_factors": "array"
+  }
+ },
+ "P05": {
+  "defaults": {
+   "mode": "binary_threshold",
+   "source_column": "cover_crop_months",
+   "threshold_months": 2.0,
+   "threshold_sensitivity": [
+    1.0,
+    2.0,
+    3.0
+   ],
+   "partial_action": "to_na",
+   "type_grouping": "group",
+   "min_cell": 30,
+   "write_treatment_column": true
+  },
+  "allowed": {
+   "mode": [
+    "binary_threshold",
+    "multi_level",
+    "per_version",
+    "continuous"
+   ],
+   "source_column": "string",
+   "threshold_months": "number",
+   "threshold_sensitivity": "array",
+   "partial_action": [
+    "to_na",
+    "treated",
+    "control",
+    "own_level"
+   ],
+   "type_grouping": [
+    "group",
+    "all",
+    "keep"
+   ],
+   "min_cell": "integer",
+   "write_treatment_column": "boolean"
+  }
+ },
+ "P06": {
+  "defaults": {
+   "scope": "adjustment_set_plus_ay",
+   "outcome_missing": "ipcw_flag",
+   "covariate_missing": "median_indicator",
+   "impute_group_by": [
+    "country"
+   ],
+   "min_group_size": 30,
+   "keep_indicator": true,
+   "max_missing_col": 0.4,
+   "mechanism_check": [
+    "describe",
+    "regress"
+   ],
+   "diff_warn_threshold": 0.05
+  },
+  "allowed": {
+   "scope": [
+    "adjustment_set_plus_ay",
+    "all_columns"
+   ],
+   "outcome_missing": [
+    "ipcw_flag",
+    "complete_case",
+    "both"
+   ],
+   "covariate_missing": [
+    "median_indicator",
+    "drop_row",
+    "category_missing"
+   ],
+   "impute_group_by": "array",
+   "min_group_size": "integer",
+   "keep_indicator": "boolean",
+   "max_missing_col": "number",
+   "mechanism_check": "array",
+   "diff_warn_threshold": "number"
+  }
+ },
+ "P07": {
+  "defaults": {
+   "time_source": "schema",
+   "unknown_action": "exclude",
+   "strict": true,
+   "allow_post_precision_vars": false,
+   "allow_post_as_secondary_outcome": true,
+   "diagnostics_on_post_vars": true
+  },
+  "allowed": {
+   "time_source": [
+    "schema",
+    "name_suffix",
+    "both"
+   ],
+   "unknown_action": [
+    "exclude",
+    "include",
+    "raise"
+   ],
+   "strict": "boolean",
+   "allow_post_precision_vars": "boolean",
+   "allow_post_as_secondary_outcome": "boolean",
+   "diagnostics_on_post_vars": "boolean"
+  }
+ },
+ "P08": {
+  "defaults": {
+   "source": "schema_roles",
+   "allow_data_driven": false,
+   "manual_list": [],
+   "include_roles": [
+    "confounder"
+   ],
+   "include_precision_vars": true,
+   "exclude_roles": [
+    "mediator",
+    "collider",
+    "instrument",
+    "noise",
+    "outcome",
+    "treatment",
+    "treatment_version",
+    "id"
+   ],
+   "ambiguous_action": "both",
+   "basis": {
+    "continuous": "quadratic",
+    "spline_df": 4
+   },
+   "interactions": [
+    [
+     "country",
+     "*"
+    ]
+   ],
+   "rare_level_action": "group",
+   "rare_level_threshold": 0.01,
+   "min_variation": 1e-12
+  },
+  "allowed": {
+   "source": [
+    "schema_roles",
+    "manual",
+    "data_driven"
+   ],
+   "allow_data_driven": "boolean",
+   "manual_list": "array",
+   "include_roles": "array",
+   "include_precision_vars": "boolean",
+   "exclude_roles": "array",
+   "ambiguous_action": [
+    "both",
+    "include",
+    "exclude"
+   ],
+   "basis": {
+    "continuous": [
+     "linear",
+     "quadratic",
+     "spline"
+    ],
+    "spline_df": "integer"
+   },
+   "interactions": "array",
+   "rare_level_action": [
+    "group",
+    "keep",
+    "drop"
+   ],
+   "rare_level_threshold": "number",
+   "min_variation": "number"
+  }
+ },
+ "P09": {
+  "defaults": {
+   "cluster_key": [
+    "grower_id"
+   ],
+   "fold_strategy": "group_stratified",
+   "n_folds": 5,
+   "seed": 20260921,
+   "year_handling": "fixed_effect",
+   "large_cluster_warn": 0.05,
+   "compute_icc": true
+  },
+  "allowed": {
+   "cluster_key": "array",
+   "fold_strategy": [
+    "group_stratified",
+    "group",
+    "random"
+   ],
+   "n_folds": "integer",
+   "seed": "integer",
+   "year_handling": [
+    "fixed_effect",
+    "second_cluster",
+    "ignore"
+   ],
+   "large_cluster_warn": "number",
+   "compute_icc": "boolean"
+  }
+ }
+}

@@ -1,0 +1,10 @@
+version: 1
+input:
+  path: "data/raw/data.csv"
+  adapter: "canonical"
+output_dir: "data/processed"
+save_interim: true
+fail_fast: true
+log_level: "INFO"
+steps: [P01, P02, P03, P04, P05, P07, P08, P06, P09]
+

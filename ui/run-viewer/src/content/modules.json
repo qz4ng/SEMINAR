@@ -1,0 +1,213 @@
+{
+ "modules": [
+  {
+   "id": "P01",
+   "name": "schema_check",
+   "file": "p01_schema_check.py",
+   "lane": 1,
+   "short": "Chặn dữ liệu sai dạng ngay ở cửa vào, trước khi lỗi âm thầm thành ô trống",
+   "long": "Kiểm tra dữ liệu có đúng dạng cam kết trong canonical.yaml: đủ cột bắt buộc, đúng kiểu, record_id hợp lệ. Dòng hỏng thật (chuỗi trong cột số, record_id rỗng) bị cách ly vào artifact quarantine. Hạng mục lạ, số ngoài miền và cột nhị phân ghi dạng chữ (Yes/No) chỉ được đánh dấu, vì P02 và P04 mới là nơi xử lý chúng.",
+   "risk": "Lỗi định dạng âm thầm biến thành ô trống ở các bước sau, đến cuối pipeline mới lộ ra và không còn truy được nguồn gốc."
+  },
+  {
+   "id": "P02",
+   "name": "harmonize",
+   "file": "p02_harmonize.py",
+   "lane": 1,
+   "short": "Đưa một thứ ghi nhiều kiểu (tên nước, kg/ha vs t/ha, Yes/No) về một mã chuẩn",
+   "long": "Chuẩn hóa chuỗi để so khớp rồi ánh xạ về mã canonical: 'Country 1', 'c1 ', 'C-1' thành C1; 'Yes/No/Có/Không' thành 1/0; quy đổi yield kg/ha sang t/ha khi có cột đơn vị. Giá trị khai null trong bảng alias (vd 'Partial') thành ô trống kèm cờ. Giá trị lạ ở country hoặc cover_crop dừng pipeline và được liệt kê hết trong một lần.",
+   "risk": "Biến country phình thành hàng chục mức; các dòng ghi kg/ha lớn gấp 1000 lần và bị P04 coi là outlier hàng loạt."
+  },
+  {
+   "id": "P03",
+   "name": "deduplicate",
+   "file": "p03_deduplicate.py",
+   "lane": 1,
+   "short": "Một ruộng-năm chỉ được đếm một lần — trùng lặp làm sai số chuẩn nhỏ giả",
+   "long": "Nhóm theo khóa grower_id + field_id + year và phân loại: trùng hệt, trùng một phần, hoặc mâu thuẫn (khác nhau ở cover_crop, yield_t_ha, country, year). Trùng hệt và trùng một phần được gộp, giữ dòng đầy đủ nhất. Nhóm mâu thuẫn được giữ nguyên và đẩy sang artifact review_list để người xem.",
+   "risk": "Cỡ mẫu to giả làm sai số chuẩn nhỏ giả, và một đơn vị bị nhân đôi trọng số ở bước IPW."
+  },
+  {
+   "id": "P04",
+   "name": "outliers",
+   "file": "p04_outliers.py",
+   "lane": 1,
+   "short": "Phân biệt giá trị cực trị thật với lỗi nhập liệu; mặc định chỉ gắn cờ",
+   "long": "Phát hiện giá trị bất thường trong từng nước: yield và diện tích dùng miền giá trị của schema, biến khác dùng robust z-score. Thử chia giá trị bất thường cho 10, 100, 1000 để nhận ra lỗi đơn vị. Mặc định chỉ gắn cờ. Nếu tỷ lệ dòng bị gắn cờ vượt max_flag_rate thì chặn pipeline, vì đó thường là lỗi hệ thống (đơn vị, nhầm cột) chứ không phải outlier lẻ.",
+   "risk": "Độ lệch chuẩn bị thổi phồng làm chỉ số cân bằng SMD 'đẹp giả'; một điểm cực trị trong nước ít mẫu có thể chi phối cả ước lượng."
+  },
+  {
+   "id": "P05",
+   "name": "treatment_define",
+   "file": "p05_treatment_define.py",
+   "lane": 2,
+   "short": "Định nghĩa \"có cover crop\": ngưỡng số tháng, dòng \"Partial\", phiên bản treatment",
+   "long": "Biến cover_crop_months thành A ∈ {0,1} theo ngưỡng (mặc định ≥ 2 tháng), sinh cột độ nhạy cho ngưỡng 1/2/3 tháng, gắn cờ và tách riêng các dòng 'Partial' để xem lại, và cảnh báo khi các loại cây che phủ cho năng suất lệch nhau nhiều (dấu hiệu vi phạm consistency).",
+   "risk": "Ước lượng trộn nhiều phiên bản can thiệp khác nhau và phụ thuộc cơ cấu mẫu; ngưỡng định nghĩa treatment không được ghi lại."
+  },
+  {
+   "id": "P07",
+   "name": "time_order",
+   "file": "p07_time_order.py",
+   "lane": 2,
+   "short": "Chặn biến đo sau can thiệp khỏi tập điều chỉnh (mediator, collider)",
+   "long": "Đọc thời điểm đo (measured_at) và affected_by_treatment của từng cột trong schema, chặn mọi biến đo sau can thiệp khỏi danh sách được phép điều chỉnh. Hậu điều kiện cứng: soil_om_post_pct, weed_pressure, in_program luôn phải bị chặn. Cột không khai trong schema bị coi là không rõ thời điểm đo và bị chặn theo mặc định.",
+   "risk": "Điều chỉnh theo mediator làm ước lượng tụt về gần 0; điều chỉnh theo collider tạo ra liên hệ giả. Không chỉ số thống kê nào phát hiện được lỗi này — chỉ thứ tự thời gian mới phân biệt được."
+  },
+  {
+   "id": "P08",
+   "name": "variable_roles",
+   "file": "p08_variable_roles.py",
+   "lane": 2,
+   "short": "Dựng tập điều chỉnh L theo vai trò trong DAG, không theo độ dự báo",
+   "long": "Dựng tập điều chỉnh L từ vai trò khai trong schema: lấy confounder, loại mediator, collider, instrument, noise. Các practice RA khác (no_till, organic_fert, rotation_len_yr) chưa rõ vai trò nên được tạo thành hai biến thể O_as_confounder / O_as_mediator để báo cáo cả hai.",
+   "risk": "Chọn biến theo độ dự báo sẽ kéo mediator vào (vì dự báo Y tốt), kéo biến kiểu instrument vào (làm khuếch đại bias còn lại), và kéo biến nhiễu vào (làm propensity score quá khớp)."
+  },
+  {
+   "id": "P06",
+   "name": "missingness",
+   "file": "p06_missingness.py",
+   "lane": 3,
+   "short": "Mô tả thiếu dữ liệu trong L, A, Y; điền thiếu kèm cờ; không kết luận MAR/MNAR",
+   "long": "Chỉ xét biến trong L, A và Y. Lập bảng thiếu theo cột × nước × nhóm A, cảnh báo khi thiếu lệch giữa hai nhóm A hoặc thiếu có cấu trúc (100% ở một nước). Loại khỏi L cột thiếu quá 40%, điền trung vị theo nước kèm cờ, và tạo cột c_outcome_observed cho bước IPCW sau này. Chỉ mô tả cơ chế thiếu, không kết luận MAR hay MNAR.",
+   "risk": "Thư viện mô hình tự bỏ dòng có ô trống, nên quần thể phân tích đổi mà không ai chủ động quyết định."
+  },
+  {
+   "id": "P09",
+   "name": "clusters",
+   "file": "p09_clusters.py",
+   "lane": 3,
+   "short": "Gom dòng theo nông hộ và chia fold theo cụm để tránh rò rỉ khi cross-fit",
+   "long": "Gán cluster_id theo nông hộ, chia 5 fold theo cụm có phân tầng theo A, bảo đảm một nông hộ không nằm ở hai fold. Tính ICC thô của yield để biết mức tương quan trong cụm.",
+   "risk": "Sai số chuẩn nhỏ giả (khoảng tin cậy hẹp hơn thực tế) và rò rỉ thông tin giữa các fold khi cross-fit."
+  }
+ ],
+ "lanes": [
+  {
+   "id": 1,
+   "label": "Lớp 1 · Chất lượng dữ liệu",
+   "question": "Dữ liệu có đọc được không?",
+   "modules": [
+    "P01",
+    "P02",
+    "P03",
+    "P04"
+   ]
+  },
+  {
+   "id": 2,
+   "label": "Lớp 2 · Định nghĩa biến",
+   "question": "Ta đang đo cái gì, được phép điều chỉnh theo cái gì?",
+   "modules": [
+    "P05",
+    "P07",
+    "P08"
+   ]
+  },
+  {
+   "id": 3,
+   "label": "Lớp 3 · Cấu trúc mẫu",
+   "question": "Mỗi dòng có phải một đơn vị độc lập không?",
+   "modules": [
+    "P06",
+    "P09"
+   ]
+  }
+ ],
+ "context_edges": [
+  {
+   "from": "P07",
+   "to": "P08",
+   "key": "eligible_columns",
+   "meaning": "Danh sách cột được phép xét làm biến điều chỉnh"
+  },
+  {
+   "from": "P08",
+   "to": "P06",
+   "key": "adjustment_set",
+   "meaning": "Tập điều chỉnh L — P06 chỉ điền thiếu cho biến trong L"
+  },
+  {
+   "from": "P05",
+   "to": "P06",
+   "key": "treatment_column",
+   "meaning": "Cột treatment dùng để so tỷ lệ thiếu giữa hai nhóm A"
+  },
+  {
+   "from": "P05",
+   "to": "P09",
+   "key": "treatment_column",
+   "meaning": "Cột treatment dùng để phân tầng khi chia fold"
+  }
+ ],
+ "blocked_reason_rules": [
+  {
+   "when": {
+    "dag_role": "mediator"
+   },
+   "text": "Đo sau can thiệp và nằm trên đường A → Y (mediator). Điều chỉnh sẽ chặn chính tác động cần đo."
+  },
+  {
+   "when": {
+    "dag_role": "collider"
+   },
+   "text": "Chịu ảnh hưởng của cả A và Y (collider). Điều chỉnh sẽ tạo liên hệ giả."
+  },
+  {
+   "when": {
+    "dag_role": "outcome"
+   },
+   "text": "Là outcome Y."
+  },
+  {
+   "when": {
+    "dag_role": "treatment"
+   },
+   "text": "Là treatment A."
+  },
+  {
+   "when": {
+    "dag_role": "treatment_version"
+   },
+   "text": "Mô tả phiên bản treatment, không phải biến điều chỉnh."
+  },
+  {
+   "when": {
+    "dag_role": "instrument"
+   },
+   "text": "Kiểu instrument: dự báo A mạnh nhưng không cần điều chỉnh; đưa vào sẽ khuếch đại bias còn lại."
+  },
+  {
+   "when": {
+    "dag_role": "noise"
+   },
+   "text": "Biến nhiễu, không liên quan nhân quả."
+  },
+  {
+   "when": {
+    "dag_role": "id"
+   },
+   "text": "Mã định danh."
+  },
+  {
+   "when": {
+    "dag_role": "cluster"
+   },
+   "text": "Khóa cụm (nông hộ) — dùng ở P09, không phải biến điều chỉnh."
+  },
+  {
+   "when": {
+    "dag_role": "outcome_predictor",
+    "measured_at": "post"
+   },
+   "text": "Đo sau time zero nhưng không chịu ảnh hưởng can thiệp; chỉ được dùng khi bật allow_post_precision_vars."
+  },
+  {
+   "when": {
+    "in_L": true,
+    "variant_membership_len": 1
+   },
+   "text": "Practice RA khác, vai trò chưa rõ: chỉ có trong biến thể O_as_confounder."
+  }
+ ]
+}

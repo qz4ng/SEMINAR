@@ -1,0 +1,12 @@
+{
+  "run_id": "golden-run",
+  "status": "blocked",
+  "failed_step": "P04",
+  "steps": [
+    {"module_id": "P01"},
+    {"module_id": "P02"},
+    {"module_id": "P03"},
+    {"module_id": "P04"}
+  ]
+}
+

@@ -1,0 +1,302 @@
+[
+ {
+  "column": "record_id",
+  "dtype": "string",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "id",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "grower_id",
+  "dtype": "string",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "cluster",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "field_id",
+  "dtype": "string",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "id",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "country",
+  "dtype": "category",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "confounder",
+  "in_L": true,
+  "variant_membership": "['O_as_confounder', 'O_as_mediator']",
+  "reason": null
+ },
+ {
+  "column": "year",
+  "dtype": "int16",
+  "measured_at": "at",
+  "affected_by_treatment": null,
+  "dag_role": "confounder",
+  "in_L": true,
+  "variant_membership": "['O_as_confounder', 'O_as_mediator']",
+  "reason": null
+ },
+ {
+  "column": "rain_longterm_mm",
+  "dtype": "float32",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "confounder",
+  "in_L": true,
+  "variant_membership": "['O_as_confounder', 'O_as_mediator']",
+  "reason": null
+ },
+ {
+  "column": "temp_longterm_c",
+  "dtype": "float32",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "confounder",
+  "in_L": true,
+  "variant_membership": "['O_as_confounder', 'O_as_mediator']",
+  "reason": null
+ },
+ {
+  "column": "soil_om_baseline_pct",
+  "dtype": "float32",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "confounder",
+  "in_L": true,
+  "variant_membership": "['O_as_confounder', 'O_as_mediator']",
+  "reason": null
+ },
+ {
+  "column": "field_size_ha",
+  "dtype": "float32",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "confounder",
+  "in_L": true,
+  "variant_membership": "['O_as_confounder', 'O_as_mediator']",
+  "reason": null
+ },
+ {
+  "column": "extension_access",
+  "dtype": "boolean",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "confounder",
+  "in_L": true,
+  "variant_membership": "['O_as_confounder', 'O_as_mediator']",
+  "reason": null
+ },
+ {
+  "column": "contract",
+  "dtype": "category",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "confounder",
+  "in_L": true,
+  "variant_membership": "['O_as_confounder', 'O_as_mediator']",
+  "reason": null
+ },
+ {
+  "column": "experience_yr",
+  "dtype": "int16",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "confounder",
+  "in_L": true,
+  "variant_membership": "['O_as_confounder', 'O_as_mediator']",
+  "reason": null
+ },
+ {
+  "column": "irrigation",
+  "dtype": "boolean",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "confounder",
+  "in_L": true,
+  "variant_membership": "['O_as_confounder', 'O_as_mediator']",
+  "reason": null
+ },
+ {
+  "column": "no_till",
+  "dtype": "boolean",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "ambiguous",
+  "in_L": true,
+  "variant_membership": "['O_as_confounder']",
+  "reason": null
+ },
+ {
+  "column": "organic_fert",
+  "dtype": "boolean",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "ambiguous",
+  "in_L": true,
+  "variant_membership": "['O_as_confounder']",
+  "reason": null
+ },
+ {
+  "column": "rotation_len_yr",
+  "dtype": "int16",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "ambiguous",
+  "in_L": true,
+  "variant_membership": "['O_as_confounder']",
+  "reason": null
+ },
+ {
+  "column": "cover_crop",
+  "dtype": "boolean",
+  "measured_at": "at",
+  "affected_by_treatment": null,
+  "dag_role": "treatment",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "cover_crop_months",
+  "dtype": "float32",
+  "measured_at": "at",
+  "affected_by_treatment": null,
+  "dag_role": "treatment_version",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "cover_crop_type",
+  "dtype": "category",
+  "measured_at": "at",
+  "affected_by_treatment": null,
+  "dag_role": "treatment_version",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "soil_om_post_pct",
+  "dtype": "float32",
+  "measured_at": "post",
+  "affected_by_treatment": true,
+  "dag_role": "mediator",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "weed_pressure",
+  "dtype": "int8",
+  "measured_at": "post",
+  "affected_by_treatment": true,
+  "dag_role": "mediator",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "season_rain_mm",
+  "dtype": "float32",
+  "measured_at": "post",
+  "affected_by_treatment": false,
+  "dag_role": "outcome_predictor",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "buyer_incentive",
+  "dtype": "boolean",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "instrument",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "noise_1",
+  "dtype": "float32",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "noise",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "noise_2",
+  "dtype": "float32",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "noise",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "noise_3",
+  "dtype": "float32",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "noise",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "noise_4",
+  "dtype": "float32",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "noise",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "noise_5",
+  "dtype": "float32",
+  "measured_at": "pre",
+  "affected_by_treatment": null,
+  "dag_role": "noise",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "yield_t_ha",
+  "dtype": "float32",
+  "measured_at": "post",
+  "affected_by_treatment": true,
+  "dag_role": "outcome",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ },
+ {
+  "column": "in_program",
+  "dtype": "boolean",
+  "measured_at": "post",
+  "affected_by_treatment": true,
+  "dag_role": "collider",
+  "in_L": false,
+  "variant_membership": "[]",
+  "reason": null
+ }
+]

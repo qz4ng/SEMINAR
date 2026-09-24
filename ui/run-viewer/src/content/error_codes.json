@@ -1,0 +1,290 @@
+[
+ {
+  "code": "P01.MISSING_REQUIRED_COLUMN",
+  "explain": "Thiếu cột bắt buộc theo schema; pipeline dừng vì không có gì để phân tích."
+ },
+ {
+  "code": "P01.UNKNOWN_COLUMN",
+  "explain": "Có cột không khai trong schema; được giữ lại kèm cảnh báo."
+ },
+ {
+  "code": "P01.COERCE_FAILED",
+  "explain": "Ô không ép được sang kiểu của schema (vd chữ 'abc' trong cột số); dòng đó bị cách ly."
+ },
+ {
+  "code": "P01.OUT_OF_RANGE",
+  "explain": "Giá trị nằm ngoài miền 'không thể' của schema; chỉ đánh dấu, vì có thể là lỗi đơn vị mà P02 sẽ quy đổi."
+ },
+ {
+  "code": "P01.NOT_ALLOWED_CATEGORY",
+  "explain": "Giá trị hạng mục chưa đúng mã chuẩn (vd 'Country 1'); chỉ đánh dấu để P02 ánh xạ."
+ },
+ {
+  "code": "P01.BAD_RECORD_ID",
+  "explain": "record_id rỗng hoặc thiếu; dòng luôn bị cách ly vì không truy vết được."
+ },
+ {
+  "code": "P01.DUPLICATE_KEY_SEEN",
+  "explain": "Phát hiện record_id trùng; để P03 xử lý."
+ },
+ {
+  "code": "P01.EMPTY_INPUT",
+  "explain": "Dữ liệu vào rỗng."
+ },
+ {
+  "code": "P01.DEFERRED_TO_P02",
+  "explain": "Cột nhị phân/hạng mục ghi dạng chữ (Yes/No/Có/Không) được để nguyên cho P02 ánh xạ, không bị coi là lỗi."
+ },
+ {
+  "code": "P01.SCHEMA_ERROR",
+  "explain": "Có lỗi schema và on_error = raise nên pipeline dừng."
+ },
+ {
+  "code": "P02.UNMAPPED_CATEGORY",
+  "explain": "Giá trị không có trong bảng alias. Ở country/cover_crop thì dừng pipeline và liệt kê mọi giá trị lạ; ở cột khác thì thành ô trống kèm cờ."
+ },
+ {
+  "code": "P02.ALIAS_TO_NA",
+  "explain": "Giá trị hợp lệ nhưng được khai 'cố ý để trống' (alias null, vd 'Partial'); thành ô trống kèm cờ để xem lại."
+ },
+ {
+  "code": "P02.FUZZY_SUGGESTION",
+  "explain": "Đề xuất ánh xạ gần đúng; chưa áp dụng vào dữ liệu."
+ },
+ {
+  "code": "P02.UNIT_CONVERTED",
+  "explain": "Đã quy đổi yield từ kg/ha sang t/ha theo cột đơn vị."
+ },
+ {
+  "code": "P02.UNIT_INFERRED",
+  "explain": "Đơn vị được SUY LUẬN theo ngưỡng chứ không khai báo; một ruộng năng suất thật sự cao có thể bị chia nhầm."
+ },
+ {
+  "code": "P02.UNIT_POLICY_UNAVAILABLE",
+  "explain": "Không có thông tin đơn vị nên không quy đổi; P04 sẽ gắn cờ nghi lỗi đơn vị."
+ },
+ {
+  "code": "P02.MIXED_UNIT_SUSPECTED",
+  "explain": "Phân phối yield có hai cụm cách nhau khoảng 1000 lần — dấu hiệu trộn đơn vị."
+ },
+ {
+  "code": "P02.CATEGORY_LEVELS_FROM_DATA",
+  "explain": "Mức hạng mục lấy từ dữ liệu thay vì schema; tập mức có thể đổi giữa các lần chạy."
+ },
+ {
+  "code": "P03.EXACT_DUPLICATES",
+  "explain": "Có nhóm dòng trùng hệt nhau; đã gộp."
+ },
+ {
+  "code": "P03.PARTIAL_DUPLICATES",
+  "explain": "Có nhóm trùng khóa nhưng khác ở cột phụ; đã gộp, giữ dòng đầy đủ nhất."
+ },
+ {
+  "code": "P03.CONFLICTING_DUPLICATES",
+  "explain": "Có nhóm trùng khóa nhưng khác ở cột quan trọng (A, Y, nước, năm) — dấu hiệu lỗi ghép bảng. Giữ nguyên mọi dòng, xem trong review_list."
+ },
+ {
+  "code": "P03.NULL_KEY",
+  "explain": "Có dòng thiếu một phần khóa nghiệp vụ; không gộp được."
+ },
+ {
+  "code": "P03.KEY_NOT_UNIQUE_AFTER_RESOLVE",
+  "explain": "Sau khi gộp mà khóa vẫn trùng — lỗi logic của module."
+ },
+ {
+  "code": "P03.CONFIG_ERROR",
+  "explain": "Cấu hình không hợp lệ (vd keep_last mà thiếu timestamp_column)."
+ },
+ {
+  "code": "P04.OUTLIERS_FLAGGED",
+  "explain": "Đã gắn cờ giá trị bất thường; dữ liệu không bị sửa (mặc định flag_only)."
+ },
+ {
+  "code": "P04.SUSPECTED_UNIT_ERROR",
+  "explain": "Giá trị bất thường chia cho 10/100/1000 thì rơi vào miền hợp lệ — nghi nhầm đơn vị."
+ },
+ {
+  "code": "P04.MAX_FLAG_RATE_EXCEEDED",
+  "explain": "Tỷ lệ dòng bị gắn cờ vượt max_flag_rate. Thường là lỗi hệ thống (đơn vị, nhầm cột) chứ không phải outlier lẻ — hãy quay lại P02."
+ },
+ {
+  "code": "P04.SMALL_GROUP",
+  "explain": "Nhóm (nước) quá nhỏ để đặt ngưỡng riêng; dùng ngưỡng toàn cục."
+ },
+ {
+  "code": "P04.ZERO_MAD",
+  "explain": "Độ lệch tuyệt đối trung vị bằng 0; bỏ qua cột này ở nhóm đó."
+ },
+ {
+  "code": "P04.NON_NUMERIC_COLUMN_SKIPPED",
+  "explain": "Cột không phải số; không kiểm tra outlier."
+ },
+ {
+  "code": "P04.ROWS_DROPPED",
+  "explain": "Đã loại dòng bị gắn cờ (action = drop_row)."
+ },
+ {
+  "code": "P05.FALLBACK_TO_BINARY",
+  "explain": "Không có cột số tháng; dùng thẳng cover_crop dạng Có/Không."
+ },
+ {
+  "code": "P05.PARTIAL_FLAGGED",
+  "explain": "Dòng 'Partial' được giữ lại, gắn cờ và tách ra partial_review để xem lại."
+ },
+ {
+  "code": "P05.OWN_LEVEL_NOT_BINARY",
+  "explain": "partial_action = own_level cần treatment nhiều mức; với treatment nhị phân các dòng này để trống."
+ },
+ {
+  "code": "P05.THRESHOLD_SENSITIVITY",
+  "explain": "Số dòng đổi trạng thái treatment khi đổi ngưỡng số tháng — độ nhạy của định nghĩa A."
+ },
+ {
+  "code": "P05.VERSION_HETEROGENEITY",
+  "explain": "Năng suất giữa các loại cây che phủ lệch hơn 1 độ lệch chuẩn — nghi vi phạm consistency."
+ },
+ {
+  "code": "P05.SMALL_VERSION_CELL",
+  "explain": "Một phiên bản treatment có quá ít dòng để ước lượng riêng."
+ },
+ {
+  "code": "P05.TREATMENT_MISSING",
+  "explain": "Có dòng không xác định được treatment (ô trống)."
+ },
+ {
+  "code": "P06.MISSING_SUMMARY",
+  "explain": "Tóm tắt tỷ lệ thiếu theo cột, nước và nhóm A."
+ },
+ {
+  "code": "P06.MISSING_DIFFERS_BY_TREATMENT",
+  "explain": "Tỷ lệ thiếu lệch giữa hai nhóm A — complete-case sẽ lệch, nên dùng trọng số IPCW."
+ },
+ {
+  "code": "P06.STRUCTURAL_MISSING",
+  "explain": "Một cột thiếu 100% ở ít nhất một nước — vấn đề thiết kế khảo sát."
+ },
+ {
+  "code": "P06.COLUMN_DROPPED_HIGH_MISSING",
+  "explain": "Cột thiếu quá max_missing_col nên bị loại khỏi L."
+ },
+ {
+  "code": "P06.IMPUTED",
+  "explain": "Đã điền thiếu (trung vị hoặc giá trị phổ biến) và gắn cờ các ô được điền."
+ },
+ {
+  "code": "P06.SMALL_GROUP",
+  "explain": "Nhóm quá nhỏ; điền bằng giá trị toàn cục thay vì theo nước."
+ },
+ {
+  "code": "P06.OUTCOME_MISSING_RATE",
+  "explain": "Số dòng thiếu outcome; không bỏ dòng, chỉ tạo cờ c_outcome_observed."
+ },
+ {
+  "code": "P06.MECHANISM_REGRESS",
+  "explain": "Các biến dự báo mạnh nhất cho việc thiếu outcome (chỉ mô tả, không kết luận MAR/MNAR)."
+ },
+ {
+  "code": "P06.MISSING_ADJUSTMENT_SET",
+  "explain": "P06 chạy khi chưa có tập L (P08 chưa chạy)."
+ },
+ {
+  "code": "P07.BLOCKED_POST_TREATMENT",
+  "explain": "Biến đo sau can thiệp bị chặn khỏi tập điều chỉnh. Đây là hành vi ĐÚNG, không phải lỗi."
+ },
+ {
+  "code": "P07.UNKNOWN_TIMING",
+  "explain": "Không rõ thời điểm đo (cột không khai trong schema); chặn theo mặc định."
+ },
+ {
+  "code": "P07.PRECISION_VAR_ALLOWED",
+  "explain": "Cho phép một biến đo sau time zero nhưng không chịu ảnh hưởng can thiệp; cần ghi lý do trong báo cáo."
+ },
+ {
+  "code": "P07.SECONDARY_OUTCOME_ALLOWED",
+  "explain": "Outcome được giữ trong dữ liệu để phân tích sau; không vào tập điều chỉnh."
+ },
+ {
+  "code": "P07.TIME_SOURCE_CONFLICT",
+  "explain": "Schema và hậu tố tên cột mâu thuẫn về thời điểm đo; ưu tiên schema."
+ },
+ {
+  "code": "P07.POST_VAR_NOT_BLOCKED",
+  "explain": "LỖI: một biến bắt buộc phải chặn (mediator/collider) lại không bị chặn."
+ },
+ {
+  "code": "P08.ADJUSTMENT_SET_BUILT",
+  "explain": "Đã dựng tập điều chỉnh L."
+ },
+ {
+  "code": "P08.AMBIGUOUS_ROLE",
+  "explain": "Có biến vai trò chưa rõ (practice RA khác); đã tạo hai biến thể L để báo cáo cả hai."
+ },
+ {
+  "code": "P08.RARE_LEVEL_GROUPED",
+  "explain": "Mức hạng mục hiếm được gộp thành 'other'."
+ },
+ {
+  "code": "P08.ZERO_VARIANCE_DROPPED",
+  "explain": "Biến gần như không biến thiên (hoặc toàn ô trống) bị loại khỏi L."
+ },
+ {
+  "code": "P08.DATA_DRIVEN_USED",
+  "explain": "Chọn biến theo dữ liệu — chỉ dùng để đối chứng, không dùng cho phân tích chính."
+ },
+ {
+  "code": "P08.FORBIDDEN_COLUMN_IN_L",
+  "explain": "LỖI: biến bị cấm (mediator, collider, instrument, outcome…) lọt vào L."
+ },
+ {
+  "code": "P08.MISSING_ELIGIBLE_COLUMNS",
+  "explain": "P08 chạy khi chưa có danh sách cột hợp lệ (P07 chưa chạy)."
+ },
+ {
+  "code": "P09.CLUSTER_SUMMARY",
+  "explain": "Số cụm (nông hộ) và phân phối kích thước."
+ },
+ {
+  "code": "P09.LARGE_CLUSTER",
+  "explain": "Một cụm chiếm quá nhiều dòng — dấu hiệu lỗi ghép bảng."
+ },
+ {
+  "code": "P09.MISSING_CLUSTER_KEY",
+  "explain": "Dòng thiếu khóa cụm được coi là một cụm riêng."
+ },
+ {
+  "code": "P09.MISSING_TREATMENT",
+  "explain": "Dòng thiếu treatment nhận fold_id = -1, không tham gia chia fold."
+ },
+ {
+  "code": "P09.FALLBACK_TO_GROUP_KFOLD",
+  "explain": "Quá ít cụm hoặc mẫu để phân tầng; lùi về GroupKFold."
+ },
+ {
+  "code": "P09.ICC_ESTIMATE",
+  "explain": "ICC thô của yield — mức tương quan trong cùng nông hộ (chỉ để phát hiện, không để báo cáo)."
+ },
+ {
+  "code": "P09.CLUSTER_SPLIT_ACROSS_FOLDS",
+  "explain": "LỖI: một nông hộ nằm ở hai fold."
+ },
+ {
+  "code": "*.SUMMARY",
+  "explain": "Thống kê tổng hợp của module (nằm trong details). Không hiển thị như một phát hiện."
+ },
+ {
+  "code": "*.EXCESSIVE_ROW_LOSS",
+  "explain": "Bước này loại quá tỷ lệ dòng cho phép (mặc định 20%) nên pipeline dừng ngay tại đây."
+ },
+ {
+  "code": "*.UNEXPECTED_EXCEPTION",
+  "explain": "Lỗi lập trình ngoài dự kiến; xem traceback trong details."
+ },
+ {
+  "code": "*.LOST_ROWS",
+  "explain": "Module làm mất dòng mà không khai báo — vi phạm hợp đồng."
+ },
+ {
+  "code": "*.DUPLICATE_RECORD_ID",
+  "explain": "Module tự tạo ra record_id trùng — vi phạm hợp đồng."
+ }
+]

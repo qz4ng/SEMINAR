@@ -117,15 +117,13 @@ Không mở thẳng file `dist/index.html` bằng trình duyệt: trang sẽ tr�
 npm run dev -- --host
 ```
 
-### Chia sẻ bằng link (GitHub Pages)
+### Chia sẻ khi repo private
 
-Workflow [`.github/workflows/deploy-ui.yml`](../.github/workflows/deploy-ui.yml) tự build và đăng giao diện mỗi khi push thay đổi trong `ui/run-viewer/` lên nhánh `main`.
+GitHub Pages **không dùng được** cho repo private trên tài khoản miễn phí, và với tài khoản trả phí thì trang vẫn công khai với mọi người có link — nên dự án không dùng Pages. Cách cho người khác xem:
 
-1. Bật một lần: trên GitHub → **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-2. Push; xem tiến trình ở tab **Actions** (khoảng 1–2 phút).
-3. Link: `https://<tên-tài-khoản>.github.io/<tên-repo>/`, vd `https://qz4ng.github.io/SEMINAR/`. Thêm `?view=context` để mở thẳng trang Bối cảnh dữ liệu.
-
-Repo **private** chỉ đăng được Pages với tài khoản GitHub trả phí; tài khoản miễn phí cần để repo public. Build cho Pages dùng biến `VITE_BASE=/<tên-repo>/` (đặt sẵn trong workflow); chạy trên máy không cần.
+- **Mời làm collaborator** (Settings → Collaborators), người đó `git clone` rồi làm theo §2–§3 ở trên.
+- **CI** ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) chạy test và build mỗi lần push, và đính kèm bản build `run-viewer-dist` (tab Actions → chọn lần chạy → Artifacts; chỉ người có quyền vào repo tải được). Bản này là file tĩnh, phải phục vụ bằng web server chứ không mở trực tiếp: giải nén rồi chạy `npx serve .` (hoặc `python3 -m http.server 8080`, Windows: `py -m http.server 8080`) trong thư mục đó.
+- Nếu sau này repo mở public, có thể đăng Pages: dựng build với `VITE_BASE=/<tên-repo>/` (`vite.config.ts` đã hỗ trợ) và dùng workflow `actions/deploy-pages`.
 
 ---
 

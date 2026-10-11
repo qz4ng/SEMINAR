@@ -25,18 +25,54 @@ def infer_covariates(df: pd.DataFrame, treatment: str = "A", outcome: str = "Y",
     reserved = RESERVED_COLUMNS | {treatment, outcome, ps}
     return [c for c in df.columns if c not in reserved]
 
+def check_groups(df: pd.DataFrame, treatment: str = "A") -> None:
+    """Báo lỗi rõ ràng nếu dữ liệu chỉ có một nhóm can thiệp (thay vì trả NaN)."""
+    n1 = int((df[treatment] == 1).sum())
+    n0 = int((df[treatment] == 0).sum())
+    if n1 == 0 or n0 == 0:
+        raise ValueError(
+            f"Dữ liệu chỉ có một nhóm can thiệp (A=1: {n1}, A=0: {n0}). "
+            "Hãy kiểm tra bước sinh dữ liệu: df['A'].value_counts() và e(X)."
+        )
+
+TRIM_MODES = ["drop", "clip"]
+
+def _validate_trim(trim: Optional[float]=None, trim_mode:str=None) -> None:
+    """
+    Kiểm tra dữ liệu của trim
+    :param trim: giá trị của trim in (0; 0.5)
+    :param trim_mode: chọn drop nếu bỏ dữ liệu, clip nếu dữ lại dữ liệu và ép dữ liệu về khoảng [trim, 1-trim]
+    """
+    if trim_mode not in TRIM_MODES:
+        raise ValueError("Trim mode không phù hợp. Hãy chọn 'drop' hoặc 'clip'.")
+    if trim is not None and not 0 < trim < 0.5:
+        raise ValueError("Gía trị của trim không phù hợp. Chỉ hỗ trợ giá trị nằm trong khoảng (0;0.5) để tránh loại bỏ nhiều dữ liệu.")
+
+def overlap_mask(e, trim: float) -> np.ndarray:
+    """True với quan sát có e(X) nằm trong vùng overlap [trim, 1 - trim]."""
+    e = np.asarray(e, dtype=float)
+    return (e >= trim) & (e <= 1 - trim)
+
 
 def iptw_weights(df: pd.DataFrame, treatment: str = "A",
-                 ps: str = "e", trim: Optional[float] = None) -> np.ndarray:
+                 ps: str = "e", trim: Optional[float] = None, trim_mode:str="drop") -> np.ndarray:
     """
     Trọng số IPTW cho ATE: w = A/e + (1-A)/(1-e).
     :param trim: nếu có, clip e về [trim, 1 - trim] trước khi tính trọng số.
+    :param trim_mode: mặc định là loại dữ liệu nếu thuộc khoảng cực đoan
     """
+    _validate_trim(trim=trim, trim_mode=trim_mode)
     a = df[treatment].to_numpy()
     e = df[ps].to_numpy(dtype=float)
-    low = 1e-12 if trim is None else trim
-    e = np.clip(e, low, 1 - low)
-    return np.where(a == 1, 1.0 / e, 1.0 / (1.0 - e))
+    keep = np.ones(len(e), dtype=float)
+    if trim is not None:
+        if trim_mode == "drop":
+            keep = overlap_mask(e, trim)
+        else:
+            e = np.clip(e, trim, 1 - trim)
+    e = np.clip(e, 1e-12, 1 - 1e-12)
+    w = np.where(a == 1, 1.0 / e, 1.0 / (1.0 - e))
+    return np.where(keep, w, 0.0)
 
 
 def _weighted_mean_var(x: np.ndarray, w: np.ndarray) -> Tuple[float, float]:
@@ -47,6 +83,13 @@ def _weighted_mean_var(x: np.ndarray, w: np.ndarray) -> Tuple[float, float]:
     var = (w * (x - mean) ** 2).sum() / denom if denom > 0 else np.nan
     return mean, var
 
+def _check_weighted_groups(w: np.ndarray, a: np.ndarray) -> None:
+    """Báo lỗi rõ nếu sau trimming một nhóm không còn quan sát nào có trọng số dương."""
+    n1, n0 = int((w[a == 1] > 0).sum()), int((w[a == 0] > 0).sum())
+    if n1 == 0 or n0 == 0:
+        raise ValueError(
+            f"Sau trimming không còn quan sát nào ở một nhóm (A=1: {n1}, A=0: {n0}). Hãy giảm trim."
+        )
 
 def _smd_vr(x: np.ndarray, a: np.ndarray, w: np.ndarray, sd_ref: float) -> Tuple[float, float]:
     m1, v1 = _weighted_mean_var(x[a == 1], w[a == 1])
@@ -58,7 +101,7 @@ def _smd_vr(x: np.ndarray, a: np.ndarray, w: np.ndarray, sd_ref: float) -> Tuple
 
 def check_balance(df: pd.DataFrame, covariates: Optional[Sequence[str]] = None, treatment: str = "A",
                   ps: str = "e", weights: Optional[Sequence[float]] = None, trim: Optional[float] = None, 
-                  smd_threshold: float = 0.1, vr_bounds: Tuple[float, float] = (0.5, 2.0)) -> pd.DataFrame:
+                  trim_mode:str="drop", smd_threshold: float = 0.1, vr_bounds: Tuple[float, float] = (0.5, 2.0)) -> pd.DataFrame:
     """
     So sánh độ cân bằng của các biến nhiễu giữa nhóm A=1 và A=0, trước và sau gán trọng số.
 
@@ -68,6 +111,9 @@ def check_balance(df: pd.DataFrame, covariates: Optional[Sequence[str]] = None, 
     :param ps: tên cột propensity score e(X)
     :param weights: trọng số tự cung cấp (độ dài n). None thì dùng IPTW từ cột ps
     :param trim: clip e(X) về [trim, 1-trim] khi tính IPTW (bỏ qua nếu truyền weights)
+    :param trim_mode: "drop" nếu bỏ giá trị cực đoan
+                    "clip" nếu giữ lại toàn bộ giá trị và ép giá trị về khoảng [trim, 1-trim]
+    mặc định là drop nếu giá trị nằm ở giá trị cực đoan
     :param smd_threshold: ngưỡng |SMD|
     :param vr_bounds: khoảng chấp nhận của VR
     :return: DataFrame, index là biến nhiễu, gồm các cột
@@ -85,7 +131,7 @@ def check_balance(df: pd.DataFrame, covariates: Optional[Sequence[str]] = None, 
 
     if weights is None:
         # Nếu không có weights thì tính từ iptw bằng cột PS
-        w_after = iptw_weights(df, treatment, ps, trim)
+        w_after = iptw_weights(df, treatment, ps, trim, trim_mode)
     else:
         w_after = np.asarray(weights, dtype=float)
         if len(w_after) != len(df):
@@ -132,3 +178,72 @@ def summarize(table: pd.DataFrame) -> pd.Series:
             "all_balanced_after": bool(table["balanced_after"].all()),
         }
     )
+
+def trim_summary(df: pd.DataFrame, trim: float, treatment: str = "A", 
+                 ps: str = "e", trim_mode: str = "drop") -> pd.Series:
+    """
+    Có bao nhiêu quan sát nằm ngoài vùng overlap [trim, 1-trim], và bao nhiêu còn lại để ước lượng.
+    n_outside / pct_outside đếm theo vùng overlap ở cả hai chế độ; n_kept chỉ giảm ở trim_mode="drop"
+    (clip giữ mọi quan sát).
+    """
+    _validate_trim(trim, trim_mode)
+    a = df[treatment].to_numpy()
+    outside = ~overlap_mask(df[ps].to_numpy(dtype=float), trim)
+    keep = ~outside if trim_mode == "drop" else np.ones(len(df), dtype=bool)
+    return pd.Series(
+        {
+            "n": len(df),
+            "n_outside": int(outside.sum()),
+            "pct_outside": float(outside.mean()),
+            "n_kept": int(keep.sum()),
+            "kept_treated": int((keep & (a == 1)).sum()),
+            "kept_control": int((keep & (a == 0)).sum()),
+        }
+    )
+
+def effective_sample_size(
+    df: pd.DataFrame,
+    treatment: str = "A",
+    ps: str = "e",
+    weights: Optional[Sequence[float]] = None,
+    trim: Optional[float] = None,
+    trim_mode: str = "drop",
+) -> pd.DataFrame:
+    """
+    Cỡ mẫu hiệu dụng (ESS, Kish) của trọng số: ESS = (sum w)^2 / sum(w^2).
+    ESS càng nhỏ so với n thì vài quan sát đang chi phối ước lượng (phương sai lớn).
+    Với ATE nên nhìn ESS theo từng nhóm, vì mỗi nhóm được gán trọng số để giống toàn mẫu.
+ 
+    :param weights: trọng số tự cung cấp; None thì dùng IPTW từ cột ps (có thể trim bằng trim, trim_mode)
+    :return: DataFrame, mỗi dòng là một nhóm (toàn mẫu, treated, control), gồm các cột
+        n                 số quan sát ban đầu (kể cả quan sát bị loại)
+        n_kept            số quan sát có trọng số dương
+        ess               cỡ mẫu hiệu dụng
+        ess_ratio         ess / n, chia cho n BAN ĐẦU nên trimming bị phản ánh đúng mức mất mẫu
+    """
+    check_groups(df, treatment)
+    a = df[treatment].to_numpy()
+    if weights is None:
+        w = iptw_weights(df, treatment, ps, trim, trim_mode)
+    else:
+        w = np.asarray(weights, dtype=float)
+        if len(w) != len(df):
+            raise ValueError("weights phải có độ dài bằng số dòng của df.")
+    _check_weighted_groups(w, a)
+ 
+    groups = {
+        "toàn mẫu": np.ones(len(a), dtype=bool),
+        "treated (A=1)": a == 1,
+        "control (A=0)": a == 0,
+    }
+    rows = {}
+    for name, mask in groups.items():
+        ww, n = w[mask], int(mask.sum())
+        ess = ww.sum() ** 2 / (ww**2).sum()
+        rows[name] = {
+            "n": n,
+            "n_kept": int((ww > 0).sum()),
+            "ess": ess,
+            "ess_ratio": ess / n
+        }
+    return pd.DataFrame(rows).T.astype({"n": int, "n_kept": int})

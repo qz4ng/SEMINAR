@@ -2,7 +2,7 @@
 
 ## Mục tiêu
 
-`distribution_scenario/` và `variable_scenario/` dùng DGP tuyến tính với 2 confounder. Ở đó mô hình tham số **đúng dạng**, nên học máy không có gì để so sánh so với phương pháp thóng kê. Nhóm kịch bản này cung cấp **một DGP chung có thể điều chỉnh** để so sánh IPTW, AIPW, TMLE, DML và Meta-learner trong điều kiện mà văn liệu causal ML cho là có ý nghĩa:
+`distribution_scenario/` và `variable_scenario/` dùng DGP tuyến tính với 2 confounder. Ở đó mô hình tham số **đúng dạng**, nên học máy không có gì để so sánh so với phương pháp thống kê. Nhóm kịch bản này cung cấp **một DGP chung có thể điều chỉnh** để so sánh IPTW, AIPW, TMLE, DML, Meta-learner và **Bayesian Causal Forest (BCF)** trong điều kiện mà văn liệu causal ML cho là có ý nghĩa:
 
 1. Mô hình tham số **sai dạng** (phi tuyến, tương tác, ngưỡng) ở PS, ở outcome, hoặc cả hai
 2. Hiệu ứng điều trị **không đồng nhất** $\tau(X)$, để đánh giá CATE
@@ -34,7 +34,7 @@ flowchart LR
 ### 1.1 Biến nền
 
 $$
-Z \sim N_d(0, \Sigma),  Corr(Zj,Zk) = \qquad \Sigma_{jk} = \rho^{|j-k|}, \qquad U_j = \Phi(Z_j) \in [0,1]
+Z \sim N_d(0, \Sigma), Corr(Zj,Zk) = \qquad \Sigma_{jk} = \rho^{|j-k|}, \qquad U_j = \Phi(Z_j) \in [0,1]
 $$
 
 Chỉ 5 tọa độ đầu $Z_1,\dots,Z_5$ tham gia vào $e$, $\mu_0$, $\tau$. Các tọa độ còn lại là **biến nhiễu thừa** (noise covariates) mà người phân tích không biết là thừa.
@@ -93,7 +93,7 @@ $\tilde\mu_0$ chuẩn hóa về phương sai 1, nên $R^2$ (tỉ lệ phương s
 
 $$
 \text{ATE} = E[\tau(Z)], \qquad \text{CATE}(x) = \tau(z) \text{ với } z = h^{-1}(x) 
-(là trả ngược lại hàm từ X ra Z thui)
+\text{ (trả ngược lại hàm từ } X \text{ ra } Z\text{)}
 $$
 
 ATE lấy **dạng đóng**, không Monte Carlo: `t-const` và `t-lin` bằng đúng 1 (vì $E[Z_j]=0$); `t-nl` với $S_1 = Z_1+Z_2+Z_3 \sim N(0, v_1)$, $S_2 = Z_4+Z_5 \sim N(0, v_2)$ và $E[\max(S,0)] = \sqrt{v/2\pi}$:
@@ -153,6 +153,7 @@ Tùy chọn mở rộng (không chạy ở vòng đầu): phương sai sai số 
 | S / T / X-learner | $\hat\mu$ hoặc $\hat\mu_a$ (+ $\hat e$ với X) | CATE | Künzel et al. (2019) |
 | R-learner | $\hat e, \hat m$ | CATE | Nie–Wager (2021) |
 | DR-learner | $\hat e, \hat\mu_a$ | CATE | Kennedy (2023): hồi quy pseudo-outcome AIPW lên $X$ |
+| Bayesian Causal Forest (BCF) | $\hat e$ | CATE (và ATE hậu nghiệm) | Hahn, Murray & Carvalho (2020): phân rã $\mathbb{E}[Y \mid X, A] = \mu(X, \hat e(X)) + \tau(X) \cdot A$ bằng hai rừng cây BART độc lập; đặt tiên nghiệm (prior) co cụm mạnh lên $\tau(X)$ để tránh thiên lệch điều chỉnh (regularization-induced confounding); suy luận khoảng tin cậy hậu nghiệm trực tiếp từ mẫu MCMC |
 
 Hàm AIPW/IRM dùng chung:
 
@@ -160,9 +161,17 @@ $$
 \hat\psi_i = \hat\mu_1(X_i) - \hat\mu_0(X_i) + \frac{A_i\,(Y_i - \hat\mu_1(X_i))}{\hat e(X_i)} - \frac{(1-A_i)\,(Y_i - \hat\mu_0(X_i))}{1-\hat e(X_i)}
 $$
 
+Cấu trúc mô hình Bayesian Causal Forest (BCF):
+
+$$
+Y_i = \mu\big(X_i, \hat e(X_i)\big) + \tau(X_i)\,A_i + \varepsilon_i, \qquad \varepsilon_i \sim N(0, \sigma^2)
+$$
+
+Trong đó $\mu(\cdot)$ sử dụng rừng cây BART tiêu chuẩn (nhiều cây, độ sâu linh hoạt) để hấp thụ cấu trúc phi tuyến của hàm kết quả nền và nhiễu thông qua điểm xu hướng $\hat e(X_i)$ dùng chung từ `learners.py`, còn $\tau(\cdot)$ sử dụng rừng cây BART độc lập với số lượng cây ít hơn, độ sâu nông và mức độ co cụm (shrinkage) mạnh để ước lượng CATE mượt mà, đồng thời tính ATE hậu nghiệm qua $\frac{1}{n}\sum_{i=1}^n \tau^{(m)}(X_i)$ tại mỗi bước lặp MCMC $m$.
+
 ### 3.2 Thư viện learner
 
-Mọi estimator chạy với **cùng** một danh sách learner cho nuisance:
+Mọi estimator (và thành phần $\hat e(X)$ đầu vào cho BCF) chạy với **cùng** một danh sách learner cho nuisance:
 
 | Mã | Learner | Vai trò |
 |---|---|---|
@@ -173,7 +182,7 @@ Mọi estimator chạy với **cùng** một danh sách learner cho nuisance:
 | `sl` | Super Learner xếp chồng 4 learner trên | mặc định của TMLE |
 | `oracle` | $e$ và $\mu_a$ thật | cận trên hiệu năng |
 
-Cross-fitting là bắt buộc cho `rf`, `gbm`, `sl` (Chernozhukov et al. 2018; Zivich & Breskin 2021). Kịch bản N3 chạy thêm biến thể **không cross-fit** để minh họa.
+Cross-fitting là bắt buộc cho `rf`, `gbm`, `sl` (Chernozhukov et al. 2018; Zivich & Breskin 2021). Kịch bản N3 chạy thêm biến thể **không cross-fit** để minh họa. Đối với BCF, bản thân bộ ước lượng là mô hình cây Bayes (BART) toàn cục nên không dùng cross-fitting trên $Y$, nhưng vẫn nhận $\hat e(X)$ đã được cross-fit từ danh sách learner trên (mặc định dùng `gbm` hoặc `sl`, kèm `oracle` để đối chiếu).
 
 ---
 
@@ -181,8 +190,8 @@ Cross-fitting là bắt buộc cho `rf`, `gbm`, `sl` (Chernozhukov et al. 2018; 
 
 | Estimand | Chỉ số |
 |---|---|
-| ATE | bias, MC SE của bias, SD, mean SE, SE/SD, RMSE, coverage CI 95%, độ rộng CI |
-| CATE | $\text{PEHE} = \sqrt{\tfrac1n\sum_i(\hat\tau(X_i) - \tau_i)^2}$ trên mẫu test độc lập $n_{test} = 2000$; bias của $\overline{\hat\tau}$ so với ATE |
+| ATE | bias, MC SE của bias, SD, mean SE (hoặc posterior SD với BCF), SE/SD, RMSE, coverage CI 95% (hoặc credible interval 95% với BCF), độ rộng CI |
+| CATE | $\text{PEHE} = \sqrt{\tfrac1n\sum_i(\hat\tau(X_i) - \tau_i)^2}$ trên mẫu test độc lập $n_{test} = 2000$; bias của $\overline{\hat\tau}$ so với ATE; riêng BCF báo cáo thêm coverage của khoảng tin cậy hậu nghiệm 95% cho từng điểm $\tau(X_i)$ |
 | Overlap | tỉ lệ $\hat e \notin [0.05, 0.95]$, max weight, ESS/n |
 | Nuisance | RMSE của $\hat e$ và $\hat\mu_a$ so với giá trị thật (giải thích vì sao một estimator thắng/thua) |
 
@@ -199,12 +208,12 @@ Lưu `results/<scenario>.csv`, tóm tắt sau.
 ## 5. Kỳ vọng (giả thuyết để kiểm chứng)
 
 - **L0:** mọi phương pháp không chệch; ML có SD lớn hơn `glm` một chút. Mốc để đo hiệu năng của ML.
-- **L1:** `glm` chệch ở IPTW và RA; AIPW-`glm` cũng chệch vì cả hai sai (Kang–Schafer). ML + cross-fit giảm chệch nhưng chưa chắc về 0 ở $n = 500$ vì $h$ khó học.
+- **L1:** `glm` chệch ở IPTW và RA; AIPW-`glm` cũng chệch vì cả hai sai (Kang–Schafer). ML + cross-fit giảm chệch nhưng chưa chắc về 0 ở $n = 500$ vì $h$ khó học. BCF với $\hat e$ từ ML kỳ vọng giảm chệch tốt nhờ cấu trúc tách biệt $\mu(X, \hat e)$ và khả năng tự động tìm tương tác phi tuyến của BART.
 - **N1, N2:** AIPW/TMLE/DML với `glm` vẫn không chệch nhờ double robustness; IPTW chệch ở N1, RA chệch ở N2. RA-`gbm` không cross-fit vẫn gần không chệch nhưng không có SE, đây là lý do cần AIPW/TMLE.
 - **N3:** `glm` chệch ở mọi estimator. ML không cross-fit: coverage dưới 95% rõ rệt. ML cross-fit: gần không chệch, coverage phục hồi khi $n \ge 2000$ (điều kiện tốc độ $n^{-1/4}$).
-- **O1:** IPTW có SD và max weight lớn; TMLE ổn định hơn AIPW vì ước lượng bị chặn trong miền của $Y$ (Ellul et al. 2025).
-- **H1 vs H2:** H1 ưu S-, R-, DR-learner (họ "mượn" độ mượt của $\tau$); H2 ưu T-, X-learner. Đây là kết quả chính của Künzel et al. và Nie–Wager.
-- **D1:** `rf`/`gbm` chịu được biến thừa; `glm` mất hiệu quả; `lasso` tốt vì $\mu_0$, $\eta_e$ thưa trong $Z$.
+- **O1:** IPTW có SD và max weight lớn; TMLE ổn định hơn AIPW vì ước lượng bị chặn trong miền của $Y$ (Ellul et al. 2025). BCF không chia cho $\hat e(X)$ nên tránh được hiện tượng nổ trọng số ở vùng overlap yếu.
+- **H1 vs H2:** H1 ưu S-, R-, DR-learner và **BCF** (họ "mượn" độ mượt của $\tau$; đặc biệt BCF đặt prior co cụm mạnh lên $\tau(X)$ nên kỳ vọng đạt PEHE thấp nhất và coverage hậu nghiệm sát 95% ở H1); H2 ưu T-, X-learner, trong khi BCF vẫn giữ ổn định nhờ tách riêng cây cho $\mu_0$ đơn giản và cây cho $\tau$ phức tạp. Đây là kết quả chính của Künzel et al., Nie–Wager và Hahn et al.
+- **D1:** `rf`/`gbm` chịu được biến thừa; `glm` mất hiệu quả; `lasso` tốt vì $\mu_0$, $\eta_e$ thưa trong $Z$. BCF sử dụng tiên nghiệm chọn biến thưa (Dirichlet splitting prior) của BART nên cũng chống chịu tốt trước 95 biến nhiễu thừa.
 
 ### 5.1 Pilot DGP (tham số đã khóa)
 
@@ -239,12 +248,12 @@ ml_scenario/
     simulate.py     # ghép, hiệu chỉnh γ0, trả df + ate_true + tau_i
   learners.py       # wrapper sklearn + cross-fit K=5, trả ê, μ̂0, μ̂1 ngoài mẫu
   estimators/
-    ra.py  iptw.py  aipw.py  tmle.py  dml.py  meta.py
+    ra.py  iptw.py  aipw.py  tmle.py  dml.py  meta.py  bcf.py
   metrics.py        # bảng ATE, PEHE, overlap, nuisance RMSE
   run.py            # grid (scenario × n × learner) -> results/<scenario>.csv
 ```
 
-`learners.py` tính nuisance **một lần** cho mỗi lần lặp, rồi mọi estimator dùng chung $\hat e, \hat\mu_0, \hat\mu_1$. Nhờ vậy khác biệt giữa estimator không bị lẫn với khác biệt do learner.
+`learners.py` tính nuisance **một lần** cho mỗi lần lặp, rồi mọi estimator (bao gồm `bcf.py` nhận $\hat e$ làm đầu vào) dùng chung $\hat e, \hat\mu_0, \hat\mu_1$. Nhờ vậy khác biệt giữa estimator không bị lẫn với khác biệt do learner.
 
 ---
 
@@ -255,6 +264,7 @@ ml_scenario/
 - Nie, X. & Wager, S. (2021). Quasi-oracle estimation of heterogeneous treatment effects. *Biometrika* 108(2). Setup A, D; R-learner. [arXiv:1712.04912](https://arxiv.org/abs/1712.04912)
 - Künzel, S. R. et al. (2019). Metalearners for estimating heterogeneous treatment effects using machine learning. *PNAS* 116(10). S/T/X-learner, thiết kế mất cân bằng.
 - Kennedy, E. H. (2023). Towards optimal doubly robust estimation of heterogeneous causal effects. *EJS* 17(2). DR-learner. [arXiv:2004.14497](https://arxiv.org/abs/2004.14497)
+- Hahn, P. R., Murray, J. S. & Carvalho, C. M. (2020). Bayesian regression tree models for causal inference: regularization, confounding, and heterogeneous effects. *Bayesian Analysis* 15(3), 965–1056. Bayesian Causal Forest (BCF). [arXiv:1706.09523](https://arxiv.org/abs/1706.09523)
 - Chernozhukov, V. et al. (2018). Double/debiased machine learning for treatment and structural parameters. *Econometrics Journal* 21(1). DML-PLR/IRM, cross-fitting.
 - van der Laan, M. J. & Rose, S. (2011). *Targeted Learning*. Springer. TMLE, Super Learner.
 - Zivich, P. N. & Breskin, A. (2021). Machine learning for causal inference: on the use of cross-fit estimators. *Epidemiology* 32(3). Cross-fitting bắt buộc với ML.

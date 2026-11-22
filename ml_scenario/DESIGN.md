@@ -200,7 +200,7 @@ code | gamma0 | ate | treated | e_outside_05 | max_weight | ess_ratio | naive_bi
 ## 6. Các phần để trống
 
 ```
-learners.py       # TODO sau pilot
+learners.py       # XONG: LEARNERS, make(), fit_nuisance(); cách dùng ở README mục 3.2
 estimators/       # ra.py iptw.py aipw.py tmle.py dml.py meta.py — TODO
 metrics.py        # TODO
 run.py            # TODO; dùng quy ước seed ở mục 3.3 và long format ở README mục 4

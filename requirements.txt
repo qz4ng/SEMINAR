@@ -11,13 +11,14 @@
 numpy>=1.24,<3.0        # (2.4.6)
 pandas>=2.0,<3.0        # (2.3.3) CHẶN pandas 3.x: cấm gán NaN vào cột bool/int (LossySetitemError) -> gãy P01, P03 và test
 scipy>=1.10             # (1.17.1) scipy.special, scipy.stats, scipy.linalg trong notebook và ml_scenario/dgp
-scikit-learn>=1.3       # (1.9.1) P09: StratifiedGroupKFold / GroupKFold
+scikit-learn>=1.3       # (1.9.1) P09: StratifiedGroupKFold / GroupKFold; ml_scenario: glm, lasso, rf, sl
 
-# ---- Thí nghiệm: notebook trong scenario/ ----
+# ---- Thí nghiệm: notebook trong scenario/, learner trong ml_scenario/ ----
 statsmodels>=0.14       # (0.15.0) OLS/GLM/Logit; PerfectSeparationWarning cần >= 0.14
 matplotlib>=3.7         # (3.11.2) vẽ hình
 ipython>=8.0            # (9.17.1) display/Markdown
 ipykernel>=6.0          # (7.4.0) kernel để VSCode/Jupyter chạy notebook trong .venv
+lightgbm>=4.0           # (4.7.0) learner `gbm` trong ml_scenario/learners.py
 
 # ---- Pipeline P01–P09 (README tạm chưa cập nhật phần này) ----
 pyarrow>=14.0           # (25.0.1) đọc/ghi parquet

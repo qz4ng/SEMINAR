@@ -30,8 +30,9 @@ ra_causal/
     ├── README.md                    # kịch bản, công thức, phương pháp, kỳ vọng
     ├── DESIGN.md                    # đặc tả giao diện code
     ├── dgp/                         # covariates.py, nuisance.py, simulate.py
+    ├── learners.py                  # cấu hình learner dùng chung + cross-fitting (glm, lasso, rf, gbm, sl, oracle)
     ├── pilot_dgp.py                 # pilot n = 10^6, ghi results/pilot_dgp.csv
-    └── tests/test_dgp.py            # 21 test cho DGP
+    └── tests/                       # test_dgp.py (21 test), test_learners.py (15 test)
 ```
 
 `main` chưa có khối thí nghiệm; toàn bộ `scenario/` và `ml_scenario/` vào `main` qua PR của `version_2.0`. Các bước refactor:
@@ -40,7 +41,7 @@ ra_causal/
 |---|---|---|
 | `distribution_scenario/` | 3 file `.py` phẳng + `run.ipynb`, 8 kịch bản | Code tách thành package `module/` (thêm `location.py`, `dispersion.py`, `evaluation.py`); mỗi nhóm kịch bản (vị trí, độ phân tán, hình dạng) một notebook trong `notebook/`. Bản phẳng cũ vẫn giữ |
 | `variable_scenario/` | R = 200, seed 20261012, n ∈ {500, 2000} (T6 thêm 8000), phần D chưa có kết quả, báo cáo `BAO_CAO_KET_QUA.md` | R = 1000, seed 20261021, cùng lưới n = 250…8000 cho cả phần A, B, D. CSV long format thêm cột `truth`, `status`. Hình theo n tách vào `figures_A/B/D/`. Báo cáo cũ bỏ; kết quả đọc ở [`results/README.md`](scenario/variable_scenario/results/README.md) và `part_*_conclusions.md` |
-| `ml_scenario/` | chưa có | Mới: DGP chung cho so sánh phương pháp học máy, 10 kịch bản (L0, L1, N1–N3, O1, H1–H3, D1). `dgp/` chỉ dùng numpy/scipy, có test và pilot đã khóa tham số. Chi tiết ở [`ml_scenario/README.md`](ml_scenario/README.md) |
+| `ml_scenario/` | chưa có | Mới: DGP chung cho so sánh phương pháp học máy, 10 kịch bản (L0, L1, N1–N3, O1, H1–H3, D1). `dgp/` chỉ dùng numpy/scipy, có test và pilot đã khóa tham số. `learners.py` gom cấu hình learner về một chỗ cho mọi estimator. Chi tiết ở [`ml_scenario/README.md`](ml_scenario/README.md) |
 
 Mỗi thư mục thí nghiệm có README riêng ghi DGP, tham số và kết quả:
 [`distribution_scenario`](scenario/distribution_scenario/README.md) ·
@@ -58,14 +59,15 @@ Mỗi thư mục thí nghiệm có README riêng ghi DGP, tham số và kết qu
 | Dùng chung | numpy | `>=1.24,<3.0` | 2.4.6 | mọi nơi |
 | | pandas | `>=2.0,<3.0` | 2.3.3 | mọi nơi. **Không dùng pandas 3** |
 | | scipy | `>=1.10` | 1.17.1 | notebook, `ml_scenario/dgp` |
-| | scikit-learn | `>=1.3` | 1.9.1 | pipeline P09 |
+| | scikit-learn | `>=1.3` | 1.9.1 | pipeline P09; `ml_scenario/learners.py` |
 | Thí nghiệm | statsmodels | `>=0.14` | 0.15.0 | OLS/GLM/Logit trong notebook |
 | | matplotlib | `>=3.7` | 3.11.2 | hình |
 | | ipython, ipykernel | `>=8.0`, `>=6.0` | 9.17.1, 7.4.0 | chạy notebook trong VSCode/Jupyter |
+| | lightgbm | `>=4.0` | 4.7.0 | learner `gbm` trong `ml_scenario/learners.py` |
 | Test | pytest | `>=7.4` | 9.1.1 | `ml_scenario/tests` |
 | Pipeline | pyarrow, pyyaml, pydantic | xem file | | chỉ khối pipeline |
 
-`requirements.txt` là nguồn sự thật về phiên bản. `pyproject.toml` và `uv.lock` **không** có nhóm "Thí nghiệm", nên `uv sync` không cài statsmodels, matplotlib, ipykernel (xem cách dùng uv ở mục 3.4).
+`requirements.txt` là nguồn sự thật về phiên bản. `pyproject.toml` và `uv.lock` **không** có nhóm "Thí nghiệm", nên `uv sync` không cài statsmodels, matplotlib, ipykernel, lightgbm (xem cách dùng uv ở mục 3.4).
 
 Khối thí nghiệm **không cần** `pip install -e .`: notebook và `ml_scenario` không import gói `ra_causal`.
 
@@ -130,13 +132,13 @@ uv venv --python 3.11              # tạo .venv, tự tải Python 3.11 nếu m
 uv pip install -r requirements.txt
 ```
 
-Dùng `uv pip install -r requirements.txt`, **không** dùng `uv sync`: `uv sync` chỉ cài theo `uv.lock` và gỡ các gói không có trong đó (statsmodels, matplotlib, ipykernel).
+Dùng `uv pip install -r requirements.txt`, **không** dùng `uv sync`: `uv sync` chỉ cài theo `uv.lock` và gỡ các gói không có trong đó (statsmodels, matplotlib, ipykernel, lightgbm).
 
 ### 3.5 Kiểm tra cài đặt
 
 ```bash
-python -c "import pandas, scipy, sklearn, statsmodels, matplotlib, ipykernel; print(pandas.__version__)"   # pandas phải là 2.x
-python -m pytest ml_scenario/tests -q                                                               # 21 passed
+python -c "import pandas, scipy, sklearn, statsmodels, matplotlib, ipykernel, lightgbm; print(pandas.__version__)"   # pandas phải là 2.x
+python -m pytest ml_scenario/tests -q                                                                         # 36 passed, khoảng 40 s
 ```
 
 ---
@@ -181,7 +183,12 @@ from dgp import Simulation
 sim = Simulation("N3")                 # một trong 10 mã; Simulation.list_scenarios() để xem
 df = sim.generate(1000, seed=1)        # X1..Xd, A, Y (cho estimator) + e, mu0, tau, Y0, Y1 (giá trị thật)
 sim.ate                                # ATE thật, dạng đóng
+
+from learners import fit_nuisance
+nu = fit_nuisance(df, "gbm", seed=1)   # ê, μ̂0, μ̂1, m̂ cross-fit K = 5, dùng chung cho mọi estimator
 ```
+
+Cấu hình từng learner và cách dùng đầy đủ: [`ml_scenario/README.md` mục 3.2](ml_scenario/README.md#32-thư-viện-learner).
 
 ---
 
@@ -189,7 +196,7 @@ sim.ate                                # ATE thật, dạng đóng
 
 | Triệu chứng | Nguyên nhân | Sửa |
 |---|---|---|
-| `ModuleNotFoundError: statsmodels` / `matplotlib` / `IPython` trong notebook | Kernel không phải `.venv`, hoặc cài bằng `uv sync` | Chọn lại kernel `.venv`; chạy `pip install -r requirements.txt` |
+| `ModuleNotFoundError: statsmodels` / `matplotlib` / `IPython` / `lightgbm` | Kernel không phải `.venv`, hoặc cài bằng `uv sync` | Chọn lại kernel `.venv`; chạy `pip install -r requirements.txt` |
 | `ModuleNotFoundError: module` ở `distribution_scenario/notebook/` | Thư mục làm việc không phải thư mục chứa notebook | Mở notebook bằng VSCode/Jupyter từ chính file đó, hoặc `os.chdir` về `notebook/` |
 | `FileNotFoundError: .../T0.csv` ở phần B hoặc D | Chưa chạy phần A | Chạy `variable_type.ipynb` trước |
 | `LossySetitemError`, kết quả ép kiểu lạ | Đang dùng pandas 3.x | `pip install "pandas>=2.0,<3.0"` |

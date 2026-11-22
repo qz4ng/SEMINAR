@@ -178,11 +178,44 @@ Mọi estimator (và thành phần $\hat e(X)$ đầu vào cho BCF) chạy với
 | `glm` | logistic / OLS trên $X$ (main effects) | tham số, mốc sai dạng |
 | `lasso` | logistic / OLS với $\ell_1$, CV | cao chiều (D1) |
 | `rf` | random forest | phi tuyến, ít tuning |
-| `gbm` | gradient boosting (LightGBM), tuning nhẹ bằng CV | phi tuyến, mạnh nhất kỳ vọng |
+| `gbm` | gradient boosting (LightGBM), tuning nhẹ bằng CV: 3 fold trên `n_estimators` ∈ {100, 300} × `num_leaves` ∈ {4, 15} | phi tuyến, mạnh nhất kỳ vọng |
 | `sl` | Super Learner xếp chồng 4 learner trên | mặc định của TMLE |
 | `oracle` | $e$ và $\mu_a$ thật | cận trên hiệu năng |
 
 Cross-fitting là bắt buộc cho `rf`, `gbm`, `sl` (Chernozhukov et al. 2018; Zivich & Breskin 2021). Kịch bản N3 chạy thêm biến thể **không cross-fit** để minh họa. Đối với BCF, bản thân bộ ước lượng là mô hình cây Bayes (BART) toàn cục nên không dùng cross-fitting trên $Y$, nhưng vẫn nhận $\hat e(X)$ đã được cross-fit từ danh sách learner trên (mặc định dùng `gbm` hoặc `sl`, kèm `oracle` để đối chiếu).
+
+#### Cài đặt trong `learners.py`
+
+Cấu hình cụ thể của từng learner nằm ở [`learners.py`](learners.py). Estimator **không tự tạo mô hình**, chỉ gọi ra từ file này:
+
+| Mã | $\hat e$ (phân loại) | $\hat\mu_a$, $\hat m$ (hồi quy) |
+|---|---|---|
+| `glm` | logistic không phạt | OLS |
+| `lasso` | logistic $\ell_1$, chọn $C$ bằng CV 5 fold | `LassoCV` 5 fold |
+| `rf` | 300 cây, lá ≥ 5 | 300 cây, lá ≥ 5, `max_features` = p/3 |
+| `gbm` | LightGBM, learning rate 0.05, `GridSearchCV` như bảng trên | như bên trái |
+| `sl` | `StackingClassifier` 4 learner trên, tầng cuối logistic | `StackingRegressor` 4 learner trên, tầng cuối NNLS |
+| `oracle` | $e$ thật | $\tilde\mu_0$, $\tilde\mu_0 + \tau$ thật |
+
+```python
+from dgp import Simulation
+from learners import LEARNER_CODES, fit_nuisance, make
+
+sim = Simulation("H3")
+df, df_test = sim.generate(1000, seed=1), sim.generate(2000, seed=2)
+
+nu = fit_nuisance(df, "gbm", seed=1)                         # e_hat, mu0_hat, mu1_hat, m_hat, fold (ngoài mẫu)
+nu, nu_test = fit_nuisance(df, "gbm", seed=1, test=df_test)  # thêm dự đoán trên mẫu test (PEHE)
+nu_in = fit_nuisance(df, "gbm", crossfit=False)              # không cross-fit (biến thể N3)
+reg = make("rf", "reg")                                      # learner mới cho bước 2 của S/X/R/DR-learner
+reg.fit(X, pseudo_y, sample_weight=w)                        # mọi learner nhận sample_weight (R-learner)
+```
+
+- `fit_nuisance` fit **một lần** mỗi lần lặp; mọi estimator dùng chung kết quả. Cùng `seed` thì cùng phân hoạch K = 5 fold (phân tầng theo A), nhận `int` hoặc `SeedSequence`.
+- Chỉ đọc `X1..Xd, A, Y`; riêng `oracle` đọc thêm `e, mu0, tau`.
+- Không clip $\hat e$: trimming là việc của estimator.
+- Dự đoán trên test là trung bình K mô hình của các fold.
+- Thời gian mỗi lần lặp ở n = 1000 (16 lõi): `glm` 0.1 s, `lasso` 1–2 s, `gbm` 2–3 s, `rf` 12 s, `sl` 90 s. Với `sl`, R = 200 mất vài giờ cho mỗi (kịch bản, n): giảm R hoặc chạy song song các lần lặp.
 
 ---
 

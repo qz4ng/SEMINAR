@@ -1,23 +1,29 @@
-# Thư viện cho dự án ra_causal — khối tiền xử lý (P01–P09).
-# Cài:  python -m venv .venv && ./.venv/bin/pip install -r requirements.txt
-# Sau đó cài chính dự án ở chế độ chỉnh sửa:  ./.venv/bin/pip install -e .
+# Thư viện cho ra_causal (version_2.0). Cách cài cho từng hệ điều hành: README.md mục 3.
+#   python -m venv .venv  ->  kích hoạt .venv  ->  pip install -r requirements.txt
+# Phần thí nghiệm (scenario/, ml_scenario/) chỉ cần file này. Pipeline P01–P09 cần thêm: pip install -e .
 #
-# Danh sách này là nguồn sự thật về phiên bản; `pyproject.toml` phải khớp với nó.
-# Không thêm thư viện mới nếu chưa được duyệt (xem SPEC_preprocessing.md §3).
+# File này là nguồn sự thật về phiên bản. `pyproject.toml` và `uv.lock` chỉ khớp ở nhóm
+# "Dùng chung", "Pipeline" và "Test"; nhóm "Thí nghiệm" chỉ có ở đây.
+# Đã kiểm tra trên Python 3.11.7; phiên bản đã chạy ghi trong ngoặc.
+# Không thêm thư viện mới nếu chưa được nhóm duyệt.
 
-# ---- Thư viện chạy ----
-pandas>=2.0,<3.0        # CHẶN pandas 3.x: 3.x cấm gán NaN vào cột bool/int
-                        # (LossySetitemError) và đổi hành vi ép kiểu -> gãy P01, P03 và fixture test
-numpy>=1.24,<3.0
-pyarrow>=14.0           # đọc/ghi parquet
-pyyaml>=6.0             # đọc config và schema
-pydantic>=2.5,<3.0      # validate config; code dùng API v2 (model_dump, field_validator) - KHÔNG chạy được với pydantic 1.x
-scikit-learn>=1.3       # chỉ dùng StratifiedGroupKFold / GroupKFold ở P09
+# ---- Dùng chung: thí nghiệm + pipeline ----
+numpy>=1.24,<3.0        # (2.4.6)
+pandas>=2.0,<3.0        # (2.3.3) CHẶN pandas 3.x: cấm gán NaN vào cột bool/int (LossySetitemError) -> gãy P01, P03 và test
+scipy>=1.10             # (1.17.1) scipy.special, scipy.stats, scipy.linalg trong notebook và ml_scenario/dgp
+scikit-learn>=1.3       # (1.9.1) P09: StratifiedGroupKFold / GroupKFold
 
-# ---- Thư viện test và phát triển ----
-pytest>=7.4
+# ---- Thí nghiệm: notebook trong scenario/ ----
+statsmodels>=0.14       # (0.15.0) OLS/GLM/Logit; PerfectSeparationWarning cần >= 0.14
+matplotlib>=3.7         # (3.11.2) vẽ hình
+ipython>=8.0            # (9.17.1) display/Markdown
+ipykernel>=6.0          # (7.4.0) kernel để VSCode/Jupyter chạy notebook trong .venv
+
+# ---- Pipeline P01–P09 (README tạm chưa cập nhật phần này) ----
+pyarrow>=14.0           # (25.0.1) đọc/ghi parquet
+pyyaml>=6.0             # (6.0.3) đọc config và schema
+pydantic>=2.5,<3.0      # (2.13.5) code dùng API v2 (model_dump, field_validator), KHÔNG chạy với pydantic 1.x
+
+# ---- Test ----
+pytest>=7.4             # (9.1.1)
 pytest-cov>=4.1
-
-
-
-

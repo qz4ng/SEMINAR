@@ -52,7 +52,7 @@ $$
 | $\gamma_0$ | hiệu chỉnh | chọn để tỉ lệ treated ≈ 50% trên mẫu tham chiếu lớn, **tính lại cho từng kịch bản** |
 | $\sigma$ | 1.0 | |
 | $X_1$ | $N(0, 1)$ | giữ liên tục ở mọi kịch bản |
-| $n$ | {500, 2000}; thêm 8000 ở **T6** | |
+| $n$ | {250, 500, 1000, 2000, 4000, 8000} | lưới chung của mọi kịch bản |
 | Số lần lặp $R$ | 1000 (thử nghiệm nhanh: 200) | |
 
 ### Nguyên tắc giữ độ mạnh confounding tương đương
@@ -66,6 +66,8 @@ $$
 Ví dụ: $X_2 \sim \text{Bernoulli}(0.5)$ có phương sai 0.25, nên hệ số là 1.0. Pilot với $n = 2 \times 10^6$ cho naive bias 0.456, gần như trùng baseline (0.450), xác nhận quy tắc này giữ được độ mạnh confounding.
 
 Với biến nhiều mức: chọn vector hiệu ứng thô theo từng mức (ví dụ $(0, 1, -1, 2)$), tâm hóa theo xác suất các mức, rồi nhân với hằng số để phương sai bằng 0.25.
+
+**Lưu ý với biến nhiều mức:** chuẩn hóa $\mathrm{Var}(g)=\mathrm{Var}(h)=0.25$ chỉ giữ độ mạnh của từng hệ số. Độ mạnh confounding thực sự do $\mathrm{Cov}(g,h)$ quyết định (baseline và T1, T3b: $0.25$). Nếu $g$ và $h$ lệch pha thì confounding của $X_2$ có thể triệt tiêu hoặc ngược dấu với $X_1$, naive bias co lại và so sánh với baseline mất ý nghĩa. Ở T4, $h=(0,-0.5,1,1.5)$ cho $\mathrm{Cov}(g,h)=-0.159$ và naive bias chỉ 0.086; đã đổi sang $h=(0,0.5,-0.5,1.5)$ ($\mathrm{Cov}=0.187$, naive bias $\approx 0.39$). Nên kiểm tra $\mathrm{Cov}(g,h)$ và naive bias ở mẫu lớn cho mỗi kịch bản mới.
 
 ---
 
@@ -105,10 +107,10 @@ VR (tỉ số phương sai) **không dùng** cho biến nhị phân, vì phươn
 Mỗi lần lặp ghi một dòng cho mỗi phương pháp, dạng long format:
 
 ```
-scenario | analysis | n | rep | method | est | se
+scenario | analysis | n | rep | method | est | se | truth | status
 ```
 
-`analysis` là cách phân tích (ví dụ `dummy`, `integer`, `omit_X3`). Lưu ra `results/<tên_kịch_bản>.csv`, sau đó mới tóm tắt. Như vậy có thể tính lại chỉ số mà không phải chạy lại mô phỏng.
+`analysis` là cách phân tích (ví dụ `dummy`, `integer`, `S2`, `S3`). Lưu ra `results/<tên_kịch_bản>.csv`, sau đó mới tóm tắt. Như vậy có thể tính lại chỉ số mà không phải chạy lại mô phỏng.
 
 ---
 
@@ -128,7 +130,7 @@ Có hai tình huống khác nhau về bản chất, cần tách riêng:
 | **T2** | Bernoulli(0.1), hệ số $0.5/0.3 \approx 1.67$ | 0/1 | mức hiếm: ô (A=1, X₂=1) nhỏ có làm SE và coverage xấu đi? |
 | **T3a** | thứ bậc 5 mức $\{0,\dots,4\}$, xác suất (0.1, 0.2, 0.4, 0.2, 0.1), hiệu ứng **tuyến tính** theo mức | `integer` / `dummy` | mã hóa số nguyên có đủ khi hiệu ứng tuyến tính? `dummy` mất bao nhiêu hiệu quả? |
 | **T3b** | như T3a nhưng hiệu ứng **phi tuyến** theo mức, ví dụ $(0, 1, 1, 0, -1)$ đã chuẩn hóa | `integer` / `dummy` | mã hóa số nguyên khi hiệu ứng không tuyến tính thì chệch bao nhiêu? |
-| **T4** | danh nghĩa 4 mức, xác suất (0.4, 0.3, 0.2, 0.1), hiệu ứng khác nhau cho e và $\mu_0$, ví dụ $g = (0, 1, -1, 0.5)$, $h = (0, -0.5, 1, 1.5)$ đã chuẩn hóa | `dummy` / `label` (mã 0,1,2,3 như số) | lỗi "label encoding" một biến danh nghĩa |
+| **T4** | danh nghĩa 4 mức, xác suất (0.4, 0.3, 0.2, 0.1), hiệu ứng khác nhau cho e và $\mu_0$, ví dụ $g = (0, 1, -1, 0.5)$, $h = (0, 0.5, -0.5, 1.5)$ đã chuẩn hóa (chọn sao cho $\mathrm{Cov}(g,h) \approx 0.19$, cùng dấu với baseline, xem lưu ý bên dưới) | `dummy` / `label` (mã 0,1,2,3 như số) | lỗi "label encoding" một biến danh nghĩa |
 | **T5** | danh nghĩa 3 mức; mức hiếm (xác suất 0.1) có $\gamma$ lớn sao cho $e \approx 0.98$ | `dummy` | gần vi phạm positivity theo tầng: trong một mức gần như ai cũng được điều trị |
 | **T6** | $N(0,1)$ nhưng chỉ quan sát bản chia nhóm theo phân vị, $k \in \{2, 3, 5, 10\}$ | `dummy` của nhóm; tham chiếu: liên tục; tham chiếu: bỏ hẳn $X_2$ | residual confounding giảm thế nào theo số nhóm? có giảm khi tăng $n$ không? |
 | **T7** *(tùy chọn)* | cả $X_1$, $X_2$ đều nhị phân | `dummy` + ước lượng theo tầng (stratification) | khi mọi biến đều định tính, ước lượng theo tầng chính xác so với 4 phương pháp |
@@ -141,7 +143,7 @@ Các con số dưới đây lấy từ một pilot nhỏ (một lần sinh $n = 
 - **T2:** không chệch, nhưng SE của IPTW và AIPW lớn hơn, coverage có thể thấp hơn ở $n = 500$ do ô nhỏ. Với AIPW (OLS riêng từng nhóm), nếu một lần lặp có ô rỗng thì hệ số của dummy không xác định được, nên **cần đếm và báo cáo** số lần xảy ra.
 - **T3a:** `integer` và `dummy` đều không chệch; `dummy` có SD lớn hơn một chút (thêm 3 tham số).
 - **T3b:** `integer` chệch (mô hình sai dạng), `dummy` không chệch. AIPW với `integer` vẫn có thể gần không chệch **nếu** mô hình PS đúng; ở đây cả PS và outcome đều dùng `integer` nên cả hai cùng sai, AIPW cũng chệch.
-- **T4:** tương tự T3b nhưng thường nặng hơn, vì thứ tự 0, 1, 2, 3 không có ý nghĩa.
+- **T4:** tương tự T3b, vì thứ tự 0, 1, 2, 3 không có ý nghĩa. Mức nặng hay nhẹ so với T3b phụ thuộc vào $\mathrm{Cov}(g,h)$ (xem lưu ý dưới), không suy ra được chỉ từ việc dùng label.
 - **T5:** IPTW có trọng số cực đoan ở nhóm control của mức hiếm, ESS giảm mạnh. OLS và AIPW ổn định hơn vì $\tau$ đồng nhất. Trimming theo $\hat e$ ở đây không đổi estimand (τ đồng nhất) và là một cách xử lý hợp lệ.
 - **T6 (pilot, OLS):**
 
@@ -154,7 +156,7 @@ Các con số dưới đây lấy từ một pilot nhỏ (một lần sinh $n = 
   | 10 nhóm | 0.96 | 0.009 | ≈ 0.95 |
   | liên tục | 1 | 0 | 0.95 |
 
-  Bias còn sót xấp xỉ $(1 - R^2) \times$ bias khi bỏ hẳn biến, khớp với kết quả kinh điển của Cochran (1968): chia 5 nhóm loại được khoảng 90% độ chệch. Điểm quan trọng: **bias này không giảm khi tăng $n$**, nên coverage càng tệ khi $n$ càng lớn. Đó là lý do T6 chạy thêm $n = 8000$.
+  Bias còn sót xấp xỉ $(1 - R^2) \times$ bias khi bỏ hẳn biến, khớp với kết quả kinh điển của Cochran (1968): chia 5 nhóm loại được khoảng 90% độ chệch. Điểm quan trọng: **bias này không giảm khi tăng $n$**, nên coverage càng tệ khi $n$ càng lớn. Đó là lý do lưới $n$ đi tới 8000.
 
 ---
 
@@ -185,6 +187,8 @@ Ghi chú:
 - **V7:** $X_3$ chịu tác động của A nên không được đưa vào mô hình PS. ATE (hiệu ứng toàn phần) $= \tau + \beta_3 \delta = 2.5$. Phân tích S3 đưa $X_3$ vào mô hình outcome sẽ ước lượng hiệu ứng trực tiếp $\tau = 2$, chệch $-0.5$ so với ATE. Đây là kịch bản duy nhất mà truth khác $\tau$.
 
 ### Kỳ vọng (pilot, chỉ OLS, $n = 2000$)
+
+Đây là giả thuyết để kiểm chứng; kết quả xem mục [Kết quả phần B](#kết-quả-phần-b).
 
 | Kịch bản | Naive bias | Bias OLS với S2 | SD OLS: S2 → S3 | Ghi chú |
 |---|---|---|---|---|
@@ -218,10 +222,13 @@ scenario/variable_scenario/
 ├── README.md              # file này
 ├── variable_type.ipynb    # phần A (+ phần C nếu làm)
 ├── add_variable.ipynb     # phần B
-└── results/               # csv kết quả Monte Carlo dạng long format
+├── ols_unfavorable.ipynb  # phần D
+└── results/               # csv kết quả Monte Carlo dạng long format, hình trong figures_A/B/D
 ```
 
-Mỗi notebook theo khung sau. Các hàm định nghĩa trong cell, có thể bắt đầu bằng cách copy các hàm ước lượng từ `baseline.ipynb` (đã có SE cho cả 4 phương pháp) rồi sửa để nhận ma trận thiết kế.
+[variable_type.ipynb](variable_type.ipynb) theo khung dưới đây. [add_variable.ipynb](add_variable.ipynb) và [ols_unfavorable.ipynb](ols_unfavorable.ipynb) dùng khung khác: mục 0 chứa phần dùng chung, sau đó mỗi kịch bản là một phần tự chứa với hàm `dgp_<mã>` riêng thay cho `dict` cấu hình (xem mô tả ở phần B và phần D bên dưới).
+
+Khung của phần A. Các hàm định nghĩa trong cell, có thể bắt đầu bằng cách copy các hàm ước lượng từ `baseline.ipynb` (đã có SE cho cả 4 phương pháp) rồi sửa để nhận ma trận thiết kế.
 
 1. **Tham số** – cell hằng số (bảng tham số ở trên).
 2. **Sinh dữ liệu** – một hàm `simulate(n, scenario, seed)` dùng `dict` cấu hình cho từng kịch bản, ví dụ:
@@ -256,30 +263,33 @@ Mỗi notebook theo khung sau. Các hàm định nghĩa trong cell, có thể b�
 - [ ] Tùy chọn: **T7**, **V7**, phần C
 - [ ] Sau khi kết quả ổn định: tách `simulate`, `make_design`, estimator thành module
 
-## Trạng thái triển khai (12/10/2026)
+## Trạng thái triển khai (02/11/2026)
 
-Báo cáo tổng hợp kèm biểu đồ và phân tích: [BAO_CAO_KET_QUA.md](BAO_CAO_KET_QUA.md).
+Đã tạo và chạy [variable_type.ipynb](variable_type.ipynb) cho T0–T6 (gồm T3a/T3b),
+[add_variable.ipynb](add_variable.ipynb) cho V0–V5 và
+[ols_unfavorable.ipynb](ols_unfavorable.ipynb) cho H0–H3, M1a–M1c. Các hàm nằm ngay
+trong cell, chưa tách module. T7, V7 và phần C vẫn là tùy chọn chưa triển khai.
 
-Đã tạo và chạy [variable_type.ipynb](variable_type.ipynb) cho T0–T6 (gồm T3a/T3b)
-và [add_variable.ipynb](add_variable.ipynb) cho V0–V5. Các hàm nằm ngay trong cell,
-chưa tách module. T7, V7 và phần C vẫn là tùy chọn chưa triển khai.
-
-Kết quả hiện tại dùng **R = 200** (chế độ thử nghiệm), n = 500/2000; riêng T6 thêm
-n = 8000. Đã lưu 48.000 dòng ước lượng và 12.000 dòng diagnostics trong `results/`.
+Kết quả hiện tại dùng mức đầy đủ **R = 1000**, seed 20261021 và cùng lưới
+n = 250/500/1000/2000/4000/8000 ở cả ba phần. Phần A và B có 648.000 dòng ước lượng
+và 162.000 dòng diagnostics trong `results/`; phần D có thêm 240.000 và 48.000 dòng.
+Hình theo n nằm trong `results/figures_A/`, `results/figures_B/`, `results/figures_D/`.
 Xem [hướng dẫn và kết quả chạy](results/README.md), cùng hai bảng tổng hợp
 [phần A](results/part_A_summary.csv) và [phần B](results/part_B_summary.csv).
-Để chạy mức đầy đủ R = 1000, đổi `R` trong cell tham số rồi Run All; hoặc đặt
-`RA_VARIABLE_REPS=1000` trước khi khởi động kernel. Lần chạy mới ghi lại CSV của
-các kịch bản tương ứng; cần sao lưu `results/` nếu muốn giữ cả hai lần chạy.
+Để chạy thử, đặt `RA_VARIABLE_REPS=200` trước khi khởi động kernel; đổi lưới n bằng
+`RA_VARIABLE_N`; đặt `RA_VARIABLE_RUN_MC=0` để chỉ đọc lại CSV. Lần chạy mới ghi lại
+CSV của các kịch bản tương ứng; cần sao lưu `results/` nếu muốn giữ cả hai lần chạy.
 
 Tham số khớp mặc định trong `distribution_scenario/distribution.py`: τ = 2,
 β = (0, 0.5, 0.5), γ = (0.5, 0.5), σ = 1. `baseline.ipynb` cũ dùng τ = 3 nên
 chỉ tham khảo công thức estimator/SE, không dùng lại hằng số đó.
 
-Baseline **OLS/IPTW/AIPW** của T0/V0 đã đạt kiểm tra bias theo MC SE, SE/SD và
-coverage; Naive vẫn chệch theo đúng DGP có confounding. Kiểm tra độc lập SE IPTW
-bằng sandwich của hệ estimating equations chung, seed con, calibration,
-consistency, HC1, SMD nhị phân, dummy khi vắng mức và tính đầy đủ của CSV đều đạt.
+Baseline **OLS/IPTW/AIPW** của T0/V0 đạt kiểm tra bias trong 3 MC SE và SE/SD trên
+toàn lưới n. Coverage trong 3 MC SE quanh 0.95 đạt ở V0 (18/18) và T0 (17/18; ngoại
+lệ là AIPW ở n = 250 với 0.927). Naive vẫn chệch theo đúng DGP có confounding. Kiểm
+tra độc lập SE IPTW bằng sandwich của hệ estimating equations chung, seed con,
+calibration, consistency, HC1, SMD nhị phân, dummy khi vắng mức và tính đầy đủ của
+CSV đều đạt. **V0** tái lập đúng ước lượng và SE của **T0** phần A trên 400 rep.
 
 Hai lựa chọn cụ thể hóa thiết kế:
 
@@ -299,7 +309,65 @@ trong T6 chỉ phục vụ mô phỏng, không được dùng làm đầu vào e
 
 ---
 
+## Kết quả phần B
+
+Notebook: [add_variable.ipynb](add_variable.ipynb). Mỗi kịch bản là một phần tự chứa, gồm: công thức DGP, hàm `dgp_<mã>` với chú thích `# KHÁC V0`, bảng so sánh với mốc, một mẫu n = 2·10⁶ phân tích bằng cả S2 và S3, Monte Carlo, nhận xét. Vẫn dùng bốn estimator, không thêm RA vì τ hằng số. Kết quả nằm trong `results/V*.csv`, `results/part_B_*`, hình trong `results/figures_B/`.
+
+| Mã | Vai trò của X3 | Giới hạn bias OLS: S2 / S3 | Coverage OLS (n = 8000): S2 / S3 | SD S3/S2 (n = 8000): OLS / IPTW / AIPW | ESS/n (n = 8000): S2 → S3 | n* |
+|---|---|---|---|---|---|---|
+| **V0** | không có X3 | +0.000 / không có S3 | 0.946 / không có S3 | không có S3 | 0.875 (chỉ có S2) | không có S3 |
+| **V1** | confounder | **+0.236** / +0.000 | **0.000** / 0.944 | 0.920 / 0.976 / 0.937 | 0.888 → 0.814 | 250 |
+| **V2** | chỉ tác động lên Y | +0.001 / +0.002 | 0.950 / 0.949 | **0.886 / 0.895 / 0.891** | 0.875 → 0.875 | 250 |
+| **V3** | chỉ tác động lên A | −0.002 / −0.002 | 0.950 / 0.954 | **1.089 / 1.273 / 1.162** | 0.913 → **0.643** | không có |
+| **V4** | noise | +0.002 / +0.002 | 0.946 / 0.945 | 1.001 / 1.000 / 1.000 | 0.875 → 0.875 | không có |
+| **V5** | confounder, ρ = 0.7 | **+0.123** / −0.001 | **0.003** / 0.933 | 0.966 / 1.052 / 0.992 | 0.774 → 0.731 | 250 |
+
+n* = n nhỏ nhất mà từ đó trở đi S3 có RMSE thấp hơn S2; OLS, IPTW và AIPW cho cùng kết quả; "không có" nghĩa là không có n nào như vậy trên lưới. Tóm tắt:
+
+- Bỏ sót confounder gây bias không giảm theo n, ở cả ba estimator (**V1**, **V5**). Balance không phát hiện được: ở **V1**, max |SMD| trên X1, X2 sau IPTW chỉ 0.006–0.034, trong khi SMD của X3 khoảng 0.49.
+- Biến tiên lượng Y nên đưa vào: SD giảm khoảng 10% ở cả ba estimator, không mất ESS (**V2**).
+- Biến chỉ tác động lên A không nên đưa vào: không lợi về bias, SD tăng khoảng 9–14% (OLS), 16–25% (AIPW), 27–31% (IPTW) (**V3**).
+- Một biến thừa gần như miễn phí, tối đa 0.7% SD ở n = 250 (**V4**). Cộng tuyến ρ = 0.7 không phải lý do để bỏ biến: S3 vẫn thắng về RMSE ở mọi n (**V5**).
+- Công thức Frisch–Waugh–Lovell giải thích các khác biệt của OLS qua hai kênh σ_res và SD(Ã), dự đoán đúng bias (**V1** +0.236, **V5** +0.123) và tỉ số SD (**V2** 0.895, **V3** 1.091).
+
+So với pilot ở phần Kỳ vọng, các bias đều khớp. Mức thay đổi SD thấp hơn pilot: **V2** giảm khoảng 10.5% (pilot 12%), **V3** tăng khoảng 9% (pilot 15%).
+
+---
+
+## Phần D. Khi OLS không còn lợi thế
+
+Notebook: [ols_unfavorable.ipynb](ols_unfavorable.ipynb). Mỗi kịch bản là một phần tự chứa, gồm: công thức DGP, hàm `dgp_<mã>` với chú thích `# KHÁC T0`, bảng so sánh với T0, một mẫu n = 2·10⁶, Monte Carlo, nhận xét.
+Thêm estimator **RA** (g-computation từ hai OLS riêng từng nhóm, SE từ IF). Kết quả nằm trong `results/D_*.csv`, `results/part_D_*`, hình trong `results/figures_D/`.
+
+Ở phần A, OLS thắng vì τ đồng nhất, μ0 tuyến tính đúng dạng, và PS với γ = 0.5 gần tuyến tính (OLS gần như double robust). Phần D phá từng điều kiện đó:
+
+| Mã | Thay đổi so với T0 | Giới hạn bias OLS | RA | AIPW | Coverage OLS (n = 8000) | n* AIPW |
+|---|---|---|---|---|---|---|
+| **H0** | P(A=1) = 0.2 | +0.002 | +0.001 | +0.001 | 0.948 | — |
+| **H1a** | τ = 2 + 0.5·X2 | +0.000 | +0.000 | +0.000 | 0.950 | — |
+| **H1b** | τ = 2 + 0.5·X2, P(A=1) = 0.2 | **+0.141** | +0.001 | +0.001 | 0.007 | 250 |
+| **H2** | X2 3 mức, mức hiếm e ≈ 0.9 và τ = 3.8 | **−0.121** | +0.002 | +0.002 | 0.002 | 250 |
+| **H3** | τ = 2 + (X2² − 1)/√2 | **−0.071** | **−0.071** | +0.001 | 0.288 | 500 |
+| **M1a** | μ0 + He3(X2), γ = 0.5 | −0.018 | −0.018 | +0.001 | 0.911 | — |
+| **M1b** | như M1a, γ = 1.0 | **−0.091** | **−0.091** | −0.001 | 0.242 | 8000 |
+| **M1c** | như M1a, γ = 1.5 | **−0.187** | **−0.187** | +0.009 | 0.002 | 4000 |
+
+n* = n nhỏ nhất mà từ đó trở đi AIPW có RMSE thấp hơn OLS. Tóm tắt:
+
+- OLS chỉ chệch khi heterogeneity *và* trọng số e(1−e) lệch cùng lúc (**H1b**, **H2**, **H3**).
+- Thêm tương tác (RA) sửa được khi τ(X) tuyến tính theo design (**H1b**, **H2**).
+- AIPW có giá trị riêng khi outcome sai dạng mà PS đúng (**H3**, **M1**).
+- Khi selection mạnh, IPTW/AIPW có SE/SD 0.5–0.9 và chỉ thắng OLS về RMSE ở n lớn (**M1b/c**).
+
+Các hằng số δ, Δ, κ là bản thử; bias OLS tỉ lệ tuyến tính với chúng.
+
+---
+
 ## Tài liệu tham khảo
+
+- Angrist, J. D. (1998). Estimating the labor market impact of voluntary military service using social security data on military applicants. *Econometrica*, 66(2), 249–288.
+- Lin, W. (2013). Agnostic notes on regression adjustments to experimental data: Reexamining Freedman's critique. *Annals of Applied Statistics*, 7(1), 295–318.
+- Słoczyński, T. (2022). Interpreting OLS estimands when treatment effects are heterogeneous. *Review of Economics and Statistics*, 104(3), 501–509.
 
 - Cochran, W. G. (1968). The effectiveness of adjustment by subclassification in removing bias in observational studies. *Biometrics*, 24(2), 295–313.
 - Brookhart, M. A. et al. (2006). Variable selection for propensity score models. *American Journal of Epidemiology*, 163(12), 1149–1156.

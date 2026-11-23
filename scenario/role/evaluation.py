@@ -179,8 +179,8 @@ def monte_carlo(sim, n: int = 2000, reps: int = 1000, methods: Sequence[str] = C
 def asymptotic_bias(sim, strategy_adjust: Sequence[str], method: str = "ols", n: int = 400_000, seed: int = 7,
                     truth: Optional[float] = None) -> float:
     """
-    Bias tiệm cận (một mẫu rất lớn) của estimator với tập hiệu chỉnh cho trước, so với hiệu ứng TỔNG.
-    Dùng làm đường tham chiếu lý thuyết: nếu bias mô phỏng ở n nhỏ khớp với giá trị này thì sai lệch là CHỆCH
+    Bias tiệm cận (một mẫu rất lớn) của estimator với tập hiệu chỉnh cho trước, so với hiệu ứng tổng.
+    Dùng làm đường tham chiếu lý thuyết: nếu bias mô phỏng ở n nhỏ khớp với giá trị này thì sai lệch là chệch
     hệ thống (cấu trúc DAG), không phải nhiễu mẫu.
     """
     truth = sim.true_ate if truth is None else truth

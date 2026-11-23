@@ -21,11 +21,15 @@ ra_causal/
 │   │   ├── notebook/                # location_test, dispersion_test, shape_test (mỗi nhóm kịch bản một notebook)
 │   │   ├── pic/                     # hình minh họa phân phối
 │   │   └── run.ipynb, *.py          # bản phẳng cũ, giữ lại để run.ipynb chạy được
-│   └── variable_scenario/           # đổi kiểu biến, thêm biến, kịch bản bất lợi cho OLS
-│       ├── variable_type.ipynb      # phần A: T0–T6
-│       ├── add_variable.ipynb       # phần B: V0–V5
-│       ├── ols_unfavorable.ipynb    # phần D: H0–H3, M1a–M1c
-│       └── results/                 # CSV long format, bảng tổng hợp, hình figures_A/ B/ D/
+│   ├── variable_scenario/           # đổi kiểu biến, thêm biến, kịch bản bất lợi cho OLS
+│   │   ├── variable_type.ipynb      # phần A: T0–T6
+│   │   ├── add_variable.ipynb       # phần B: V0–V5
+│   │   ├── ols_unfavorable.ipynb    # phần D: H0–H3, M1a–M1c
+│   │   └── results/                 # CSV long format, bảng tổng hợp, hình figures_A/ B/ D/
+│   └── role_scenario/               # vai trò của biến (confounder, instrument, mediator, collider...) và tập hiệu chỉnh
+│       ├── roles_test.ipynb         # 9 kịch bản, Monte Carlo, quét tham số, kết luận
+│       ├── simulation.py, evaluation.py, balance.py, utilities.py
+│       └── DAG.png, README.md
 └── ml_scenario/                     # nhóm học máy: DGP chung, Z ẩn, X = h(Z)
     ├── README.md                    # kịch bản, công thức, phương pháp, kỳ vọng
     ├── DESIGN.md                    # đặc tả giao diện code
@@ -41,11 +45,13 @@ ra_causal/
 |---|---|---|
 | `distribution_scenario/` | 3 file `.py` phẳng + `run.ipynb`, 8 kịch bản | Code tách thành package `module/` (thêm `location.py`, `dispersion.py`, `evaluation.py`); mỗi nhóm kịch bản (vị trí, độ phân tán, hình dạng) một notebook trong `notebook/`. Bản phẳng cũ vẫn giữ |
 | `variable_scenario/` | R = 200, seed 20261012, n ∈ {500, 2000} (T6 thêm 8000), phần D chưa có kết quả, báo cáo `BAO_CAO_KET_QUA.md` | R = 1000, seed 20261021, cùng lưới n = 250…8000 cho cả phần A, B, D. CSV long format thêm cột `truth`, `status`. Hình theo n tách vào `figures_A/B/D/`. Báo cáo cũ bỏ; kết quả đọc ở [`results/README.md`](scenario/variable_scenario/results/README.md) và `part_*_conclusions.md` |
+| `role_scenario/` | chưa có | Mới (qz4ng): 9 kịch bản về vai trò của biến, so Naive/OLS/IPTW/AIPW khi hiệu chỉnh đúng hoặc sai tập biến; DGP riêng, SE của IPTW có hiệu chỉnh cho việc ước lượng PS. Notebook kèm quét tham số và quy tắc chọn biến. Tên cũ `role/` ở branch `version_1.0` |
 | `ml_scenario/` | chưa có | Mới: DGP chung cho so sánh phương pháp học máy, 10 kịch bản (L0, L1, N1–N3, O1, H1–H3, D1). `dgp/` chỉ dùng numpy/scipy, có test và pilot đã khóa tham số. `learners.py` gom cấu hình learner về một chỗ cho mọi estimator. Chi tiết ở [`ml_scenario/README.md`](ml_scenario/README.md) |
 
 Mỗi thư mục thí nghiệm có README riêng ghi DGP, tham số và kết quả:
 [`distribution_scenario`](scenario/distribution_scenario/README.md) ·
 [`variable_scenario`](scenario/variable_scenario/README.md) ·
+[`role_scenario`](scenario/role_scenario/README.md) ·
 [`ml_scenario`](ml_scenario/README.md).
 
 ---
@@ -152,6 +158,7 @@ python -m pytest ml_scenario/tests -q                                           
 | `scenario/baseline.ipynb` | Run All | |
 | `distribution_scenario/notebook/*.ipynb` | Run All | Notebook tự thêm thư mục cha vào `sys.path` để import `module.*` |
 | `distribution_scenario/run.ipynb` | Run All | Import các file `.py` phẳng nằm cạnh notebook |
+| `role_scenario/roles_test.ipynb` | Run All | Đặt `ROLES_REPS=20` để chạy thử nhanh (mặc định 1000); kết quả ghi vào `results/` cạnh notebook |
 | `variable_scenario/*.ipynb` | Run All, **phần A trước** | Phần B, D đọc `results/T0.csv` của phần A. Phần B mất khoảng 10 phút ở R = 1000 |
 | `ml_scenario/` | `python -m pytest ml_scenario/tests -q`<br>`python ml_scenario/pilot_dgp.py` | Pilot sinh 10^6 dòng mỗi kịch bản, ghi đè `ml_scenario/results/pilot_dgp.csv` |
 

@@ -14,7 +14,7 @@ Mô hình (A = can thiệp 0/1, Y = kết quả)
 -----------------------------------------
   ngoại sinh  : C1, C2, Z, P, U, V1, V2 ~ N(0,1) độc lập
   proxy       : W  = C1 + w_noise * N(0,1)                 (đo C1 có sai số)
-  M-bias      : K0 = k0_v1*V1 + k0_v2*V2 + k0_noise*N(0,1) (collider TRƯỚC can thiệp)
+  M-bias      : K0 = k0_v1*V1 + k0_v2*V2 + k0_noise*N(0,1) (collider trước can thiệp)
   can thiệp   : logit e = g0 + g_c1*C1 + g_c2*C2 + g_z*Z + g_u*U + g_v1*V1 ;  A ~ Bernoulli(e)
   mediator    : M  = a_m*A + m_noise*N(0,1)
   outcome     : Y  = tau_d*A + b_c1*C1 + b_c2*C2 + b_p*P + b_u*U + b_v2*V2 + b_m*M + sigma*N(0,1)

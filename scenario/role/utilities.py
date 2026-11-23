@@ -116,6 +116,7 @@ def hajek_se_ps_corrected(a: np.ndarray, y: np.ndarray, e: np.ndarray, Xps: np.n
     Tham số θ = (mu1, mu0, gamma) giải đồng thời
         sum a/e (y - mu1) = 0,  sum (1-a)/(1-e) (y - mu0) = 0,  sum x (a - e) = 0.
     :param Xps: ma trận các biến thêm vào mô hình 
+    :return: 
     """
     n, p = Xps.shape
     w1, w0 = a / e, (1 - a) / (1 - e) # tính trọng số cho từng quan sát
@@ -130,6 +131,7 @@ def hajek_se_ps_corrected(a: np.ndarray, y: np.ndarray, e: np.ndarray, Xps: np.n
     B[0, 2:] = (-(a * (y - m1) * (1 - e) / e)[:, None] * Xps).mean(axis=0)
     # đạo hàm của control 
     B[1, 2:] = (((1 - a) * (y - m0) * e / (1 - e))[:, None] * Xps).mean(axis=0)
+    # đạo hàm của logistic score
     B[2:, 2:] = -(Xps.T * (e * (1 - e))) @ Xps / n
     inf = psi @ np.linalg.inv(B).T
     psi_tau = inf[:, 0] - inf[:, 1]
@@ -144,11 +146,12 @@ def bootstrap_se(estimator: Callable[[pd.DataFrame], float], df: pd.DataFrame, B
     vals = [estimator(df.iloc[rng.integers(0, n, n)]) for _ in range(B)]
     return float(np.std(vals, ddof=1))
 
+### Vai trò của biến suy ra từ DAG
 
-# ----------------------------------------------------------------------------------------------
-# Vai trò của biến suy ra từ DAG
-# ----------------------------------------------------------------------------------------------
 def _children(edges: Iterable[Tuple[str, str]]) -> Dict[str, Set[str]]:
+    """
+    Truy xuất quan hệ parents
+    """
     ch: Dict[str, Set[str]] = {}
     for s, d in edges:
         ch.setdefault(s, set()).add(d)
@@ -157,6 +160,11 @@ def _children(edges: Iterable[Tuple[str, str]]) -> Dict[str, Set[str]]:
 
 
 def descendants(edges: Iterable[Tuple[str, str]], node: str) -> Set[str]:
+    """
+    Xác định hậu duệ của một node trong DAG. 
+    Ý tưởng: biến D là hậu duệ của X nếu có 1 đường hướng từ X đến D
+    Ví dụ: X -> A -> M -> Y => A, M, Y là hậu duệ của X
+    """
     ch, seen, stack = _children(edges), set(), [node]
     while stack:
         for c in ch.get(stack.pop(), ()):
@@ -167,12 +175,15 @@ def descendants(edges: Iterable[Tuple[str, str]], node: str) -> Set[str]:
 
 
 def ancestors(edges: Iterable[Tuple[str, str]], node: str) -> Set[str]:
+    """
+    Lấy ancestors của một node trong DAG. Ngược lại với descendants()
+    """
     return descendants([(d, s) for s, d in edges], node)
 
 
 def classify_roles(edges: Sequence[Tuple], treatment: str = "A", outcome: str = "Y") -> Dict[str, str]:
     """
-    Gán vai trò cho từng biến theo cấu trúc DAG (heuristic cho các DAG nhỏ trong notebook, không thay do-calculus).
+    Gán vai trò cho từng biến theo cấu trúc DAG.
 
     Hậu can thiệp (là hậu duệ của A):
         mediator   nằm trên đường từ A tới Y
